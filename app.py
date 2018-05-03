@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn import preprocessing
 
 #changed all , by . in cvs files
 
@@ -147,10 +148,30 @@ print(salouel_data.info())
 
 
 train = salouel_data[salouel_data['Dates'] < '31/12/2013']
+train = train.drop("Dates", axis=1)
 
 print(train.info())
 
 test = salouel_data[salouel_data['Dates'] > '31/12/2013']
+test = test.drop("Dates", axis=1)
 
-print(test.head())
+print(train.head())
+
+min_max_scaler = preprocessing.MinMaxScaler()
+
+test_normalized = min_max_scaler.fit_transform(test)
+train_normalized = min_max_scaler.fit_transform(train)
+
+print((train.head()))
+
+sequence_length = 50
+
+"""
+ #### CREATING OF SEQUENCES   
+"""
+def create_seq(dataset):
+    for i in range(len(dataset) - sequence_length):
+            a = dataset[i:(i + sequence_length), 0]
+            dataX.append(a)
+            dataY.append(dataset[i + sequence_length, 0])
 
