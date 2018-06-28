@@ -125,34 +125,6 @@ Returen Y and X
 """
 test_date = '31/12/2014'
 
-
-def gen_test_data1(array_raw_data): # Fixed transformation into sequences!!!
-    # concat is first
-    df = array_raw_data.iloc[1:]
-    #df.columns = cols
-    df_temp = df.drop(["Date", 'NO2', 'O3'], axis=1)
-    df_temp = df_temp.astype(float)
-    for col in df_temp.columns:
-        df_temp[col] = df_temp[col].apply(scale_transformer, args=(settings_array[col],))
-    df_temp["Date"] = pd.to_datetime(df["Date"])
-
-    df_temp = df_temp[df_temp['Date'] > test_date].dropna(axis=0, how="any")
-
-
-
-    Y = df_temp['PM10']
-    X = df_temp[['RR', 'TN', 'TX', 'TM',
-                     'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']]
-    X_seq = np.array(gen_sequence(X))
-
-
-
-    X_np = np.array(X_seq)
-    Y_reshaped = Y.values.reshape(len(Y), 1)
-
-    Y_reshaped_resized = Y_reshaped[n_past + n_future - 1:len(Y_reshaped)]
-    return X_np, Y_reshaped_resized
-
 """
 NORMALISATION
 """
@@ -168,6 +140,9 @@ for col in salouel_data.columns:
 
 def get_season(dt):
     # it returnts string
+    #print('type of dt:' + str(type(dt)))
+    #print(dt)
+    dt = dt.date()
     if (dt.month < 3):
         return 'H'
     elif (dt.month < 6):
@@ -189,11 +164,44 @@ final_date = '31/12/2015'
 
 
 
-def prepare_data(df_temp):
+def prepare_data(df_temp, keep_season=False, keep_wind=False):
 
-    train = df_temp[df_temp['Date'] < test_date].drop(["Date", "Season"], axis=1).dropna(axis=0, how="any")
-    test = df_temp[df_temp['Date'] > test_date].drop(["Date", "Season"], axis=1).dropna(axis=0, how="any")
-    return train, test
+    train_data = df_temp[df_temp['Date'] < test_date].drop(["Date"], axis=1).dropna(axis=0, how="any")
+    test_data = df_temp[df_temp['Date'] > test_date].drop(["Date"], axis=1).dropna(axis=0, how="any")
+
+    season_train = train_data['Season']
+    season_test = test_data['Season']
+
+    train_data = train_data.drop("Season", axis=1)
+    test_data = test_data.drop("Season", axis=1)
+
+    vent_train = train_data["vent"]
+    vent_test = test_data["vent"]
+
+    train_data = train_data.drop("vent", axis=1)
+    test_data = test_data.drop("vent", axis=1)
+
+
+    for col in salouel_data.columns:
+        train_data[col] = train_data[col].apply(scale_transformer, args=(settings_array[col],))
+
+    for col in test_data.columns:
+        test_data[col] = test_data[col].apply(scale_transformer, args=(settings_array[col],))
+
+    if(keep_season):
+        train_data["Season"] = season_train
+        test_data["Season"] = season_test
+
+    if(keep_wind):
+        train_data["vent"] = vent_train
+        test_data["vent"] = vent_test
+
+    train_data = pd.get_dummies(train_data)
+    test_data = pd.get_dummies(test_data)
+
+
+
+    return train_data, test_data
 
 
 
@@ -213,6 +221,7 @@ def clean_data(array_raw_data, cut):
         begin_date = '01/01/2005'
     # df_temp["Date"] = pd.to_datetime(df["Date"])
     df_temp['Season'] = df_temp["Date"].apply(get_season)
+    df_temp['vent'] = df_temp['DXY'].apply(get_dir)
 
     return df_temp
 
@@ -231,33 +240,14 @@ def gen_sequence(df):
 def test_station(data, station, cut):
     text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
     df_temp = clean_data(data, cut)
+
     # Pollution plots go here
+
     display_play(df_temp)
-    train_data, test_data = prepare_data(df_temp)
-    vent_train = train_data["DXY"]
-    vent_test = test_data["DXY"]
 
-    vent_train = vent_train.apply(get_dir)
-    vent_test = vent_test.apply(get_dir)
+    train_data, test_data = prepare_data(df_temp, True, True)
 
-
-    for col in salouel_data.columns:
-        train_data[col] = train_data[col].apply(scale_transformer, args=(settings_array[col],))
-
-    for col in test_data.columns:
-        test_data[col] = test_data[col].apply(scale_transformer, args=(settings_array[col],))
-
-
-    train_data["vent"] = vent_train
-    test_data["vent"] = vent_test
-
-    train_data = pd.get_dummies(train_data)
-    test_data = pd.get_dummies(test_data)
-
-    train_data = train_data.drop("DXY", axis=1)
-    test_data = test_data.drop("DXY", axis=1)
 
     print(test_data.head())
 
@@ -413,17 +403,15 @@ def test_station(data, station, cut):
 
 dict = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
-#Test plot pollution
-test_station(creil_raw_data, "Creil", True)
+#Test plot pollution#
+#test_station(creil_raw_data, "Creil", True)
 
-"""
+
 for key in dict.keys():
     test_station(dict[key], key, False)
     test_station(dict[key], key, True)
 
-
-
-
+"""
 for st in arr_row_data: # the best result is 2 -> saluel True
     test_station(st, False)
     test_station(st, True)
