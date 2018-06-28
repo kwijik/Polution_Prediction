@@ -10,6 +10,8 @@ import keras
 from sklearn.metrics import confusion_matrix, recall_score, precision_score
 from keras.models import Sequential,load_model
 from keras.layers import Dense, Dropout, LSTM
+from sklearn.model_selection import GridSearchCV
+from keras.wrappers.scikit_learn import KerasRegressor
 
 from keras.layers.core import Activation
 
@@ -221,6 +223,11 @@ def r2_keras(y_true, y_pred):
     SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
     return ( 1 - SS_res/(SS_tot + K.epsilon()))
 
+# metrics used to evaluate accuracy in GridSearch
+def soft_acc(y_true, y_pred):
+    return K.mean(K.equal(K.round(y_true), K.round(y_pred)))
+
+
 """
 
 nb_features = seq_array.shape[2]
@@ -241,22 +248,30 @@ label_array = label_array.reshape(len(label_array), 1)
 nb_features = seq_norm_df.shape[2]
 
 
+def create_model():
+    model = Sequential()
+    model.add(LSTM(
+             input_shape=(sequence_length, nb_features),
+             units=100,
+             return_sequences=True))
+    model.add(Dropout(0.25))
+    model.add(LSTM(
+              units=50,
+              return_sequences=False))
+    model.add(Dropout(0.25))
+    model.add(Dense(units=1))
+    model.add(Activation("linear"))
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae', r2_keras])
+    return model
 
-model = Sequential()
-model.add(LSTM(
-         input_shape=(sequence_length, nb_features),
-         units=100,
-         return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(
-          units=50,
-          return_sequences=False))
-model.add(Dropout(0.2))
-model.add(Dense(units=1))
-model.add(Activation("linear"))
-model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['mae', r2_keras])
+model_path = './regression_model.h5'
+label_array = label_array[sequence_length:len(label_array)]
 
-print(model.summary())
+
+
+
+
+#print(model.summary())
 
 
 model_path = './regression_model.h5'
@@ -264,16 +279,41 @@ model_path = './regression_model.h5'
 label_array = label_array[sequence_length:len(label_array)]
 
 norm_label_array = norm_label_array[sequence_length:len(norm_label_array)]
-
 """
 
-history = model.fit(seq_norm_df, norm_label_array, epochs=100, batch_size=200, validation_split=0.05, verbose=2,
+model = KerasRegressor(build_fn=create_model, verbose=0)
+
+batch_size = [10, 20, 40, 60, 80, 100]
+epochs = [10, 50, 100, 150, 200]
+
+param_grid = dict(batch_size=batch_size, epochs=epochs)
+
+grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=-1)
+
+grid_result = grid.fit(seq_norm_df, norm_label_array)
+
+
+print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+means = grid_result.cv_results_['mean_test_score']
+stds = grid_result.cv_results_['std_test_score']
+params = grid_result.cv_results_['params']
+for mean, stdev, param in zip(means, stds, params):
+    print("%f (%f) with: %r" % (mean, stdev, param))
+"""
+#for bs in batch_size_array:
+
+model = create_model()
+
+epochs = 100
+
+batch_size = 100
+
+history = model.fit(seq_norm_df, norm_label_array, epochs=epochs, batch_size=batch_size, validation_split=0.1, verbose=2,
           callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
                        keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
           )
 
-
-
+"""
 history = model.fit(seq_array, label_array, epochs=30, batch_size=200, validation_split=0.05, verbose=2,
           callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
                        keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
@@ -284,12 +324,50 @@ history = model.fit(seq_array, label_array, epochs=30, batch_size=200, validatio
 print("it works!")
 #print(history.history.keys())
 
+# R2 plot
 
 
-"""
-New file goes here
 
-"""
+fig_acc = plt.figure(figsize=(10, 10))
+plt.plot(history.history['r2_keras'])
+plt.plot(history.history['val_r2_keras'])
+plt.title('model r^2')
+plt.ylabel('R^2')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+fig_acc.savefig("./model_r2.png")
+
+
+
+# summarize history for MAE
+fig_acc = plt.figure(figsize=(10, 10))
+plt.plot(history.history['mean_absolute_error'])
+plt.plot(history.history['val_mean_absolute_error'])
+plt.title('model MAE')
+plt.ylabel('MAE')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+fig_acc.savefig("./model_mae.png")
+
+# summarize history for Loss
+fig_acc = plt.figure(figsize=(10, 10))
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+fig_acc.savefig("./model_regression_loss.png")
+
+
+
+#
+#New file goes here
+#
+
 
 def add_new_data(df):
     train1, test1 = separate_data(roth_data, roth_raw_data)
@@ -361,7 +439,7 @@ if os.path.isfile(model_path):
     scores_test = estimator.evaluate(np.array(seq_norm_train), np.array(norm_train_y), verbose=2)
     print('\nMAE: {}'.format(scores_test[1]))
     print('\nR^2: {}'.format(scores_test[2]))
-    res = "Sequence length: " + str(sequence_length) + '\nMAE: {}'.format(scores_test[1]) + '\nR^2: {}'.format(scores_test[2])
+    res = "Sequence length: " + str(sequence_length) + "\nNombre d'epochs: " + str(epochs) + "\nBatch_size: " + str(batch_size) + '\nMAE: {}'.format(scores_test[1]) + '\nR^2: {}'.format(scores_test[2])
     write_results(res)
 
     y_pred_test = estimator.predict(np.array(seq_norm_test))
@@ -387,4 +465,11 @@ if os.path.isfile(model_path):
     plt.legend(['predicted', 'actual data'], loc='upper left')
     plt.show()
     fig_verify.savefig("./model_regression_verify.png")
+    
+    
+def make_prediction(df):
+        estimator = load_model(model_path, custom_objects={'r2_keras': r2_keras})
+        # here goes separation data into X and Y, normalization, etc
+        y_pred_test = estimator.predict(np.array(df_x))
+
 
