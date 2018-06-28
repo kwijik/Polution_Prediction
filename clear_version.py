@@ -18,6 +18,8 @@ from math import sqrt
 
 from Column_settings import *
 
+np.random.seed(7)
+
 #changed all , by . in cvs files
 
 text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -144,7 +146,7 @@ def merge_data(array_raw_data):
         df_temp["Date"] = pd.to_datetime(df["Date"])
         arr_dfs.append(df_temp)
     cnc_df = pd.concat(arr_dfs).sort_values("Date").dropna(axis=0, how="any")
-    cnc_df = cnc_df[cnc_df['Date'] > '31/12/2010']
+    cnc_df = cnc_df[cnc_df['Date'] > '31/12/2009']
     train = cnc_df[cnc_df['Date'] < '31/12/2013'].drop("Date", axis=1)
     test = cnc_df[cnc_df['Date'] > '31/12/2013'].drop("Date", axis=1)
     return train, test
