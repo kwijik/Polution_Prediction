@@ -45,9 +45,9 @@ def reverse_y(val, col_PM10):
 def r2_keras(y_true, y_pred):
     """Coefficient of Determination
     """
-    SS_res =  K.sum(K.square( y_true - y_pred ))
-    SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
-    return ( 1 - SS_res/(SS_tot + K.epsilon()))
+    SS_res =  np.sum(np.square( y_true - y_pred ))
+    SS_tot = np.sum(np.square( y_true - np.mean(y_true) ) )
+    return ( 1 - SS_res/(SS_tot + np.finfo(float).tiny))
 
 
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
@@ -161,20 +161,6 @@ def separate_data(array_raw_data, cut):
     return train, test
 
 
-def gen_test_data(array_raw_data):
-    # concat is first
-    df = array_raw_data.iloc[1:]
-    df.columns = cols
-    df_temp = df.drop(["Date", 'NO2', 'O3'], axis=1)
-    df_temp = df_temp.astype(float)
-    df_temp["Date"] = pd.to_datetime(df["Date"])
-
-    df_temp = df_temp[df_temp['Date'] > test_date].dropna(axis=0, how="any")
-
-    Y = df_temp['PM10']
-    X = df_temp.drop('PM10', axis=1)
-    return Y, X
-
 n_past = 90
 n_future = 0
 
@@ -265,18 +251,24 @@ def test_station(station, cut):
                            keras.callbacks.ModelCheckpoint(model_path_merged, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
               )
 
-
     estimator = load_model(model_path_merged, custom_objects={'r2_keras': r2_keras})
 
     index = (next(i for i, j in enumerate(arr_row_data) if j is roth_raw_data) + 1) % len(arr_row_data)  # gives index of the next element
 
     Y_test, X_test = gen_test_data(arr_row_data[index])
+    np_X = np.array(gen_sequence(X_test))
+    print(X_test.head())
+    print(X_test.info())
+    print(np_X.shape)
 
-    scores_test = estimator.evaluate(np.array(gen_sequence(X_test)), np.array(Y_test.values.reshape(len(Y_test), 1)), verbose=2)
+    Y_test = Y_test[n_past + n_future - 1:len(Y_test)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
+    Y_test_np = np.array(Y_test.values.reshape(len(Y_test), 1))
+    scores_test = estimator.evaluate(np_X, Y_test_np, verbose=2)
     print('\nMAE: {}'.format(scores_test[1]))
     print('\nR^2: {}'.format(scores_test[2]))
 
-    final_preds = estimator.predict()
+    final_preds = estimator.predict(np_X)
+    print(type(final_preds))
 
 
     fig_acc = plt.figure(figsize=(10, 10))
@@ -294,10 +286,10 @@ def test_station(station, cut):
 
 
 
-    test_MSE = np.mean((final_preds - Y_test) ** 2)
-    test_MAE = np.mean(np.absolute(final_preds - Y_test))
-    test_RMSE = np.sqrt(np.mean((final_preds - Y_test) ** 2))
-    test_R2 = r2_keras(Y_test, final_preds)
+    test_MSE = np.mean((final_preds - Y_test_np) ** 2)
+    test_MAE = np.mean(np.absolute(final_preds - Y_test_np))
+    test_RMSE = np.sqrt(np.mean((final_preds - Y_test_np) ** 2))
+    test_R2 = r2_keras(Y_test_np, final_preds)
     print("Test mse is: ", test_MSE)
     print("Test mae is: ", test_MAE)
     print("Test rmse is: ", test_RMSE)
