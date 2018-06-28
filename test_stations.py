@@ -18,9 +18,26 @@ from math import sqrt
 
 from Column_settings import *
 
+
+import matplotlib.patches as mpatches
+
+class AnyObject(object):
+    pass
+
+class AnyObjectHandler(object):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        width, height = handlebox.width, handlebox.height
+        patch = mpatches.Rectangle([x0, y0], width, height, facecolor='red',
+                                   edgecolor='black', hatch='xx', lw=3,
+                                   transform=handlebox.get_transform())
+        handlebox.add_artist(patch)
+        return patch
+
 np.random.seed(7)
 
 #changed all , by . in cvs files
+text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def write_results(text):
     #file = open("results.txt", "w")
@@ -45,9 +62,9 @@ def reverse_y(val, col_PM10):
 def r2_keras(y_true, y_pred):
     """Coefficient of Determination
     """
-    SS_res =  np.sum(np.square( y_true - y_pred ))
-    SS_tot = np.sum(np.square( y_true - np.mean(y_true) ) )
-    return ( 1 - SS_res/(SS_tot + np.finfo(float).tiny))
+    SS_res =  K.sum(K.square( y_true - y_pred ))
+    SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
+    return ( 1 - SS_res/(SS_tot + K.epsilon()))
 
 
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
@@ -126,7 +143,31 @@ def gen_test_data(array_raw_data):
     return Y, X
 
 
+def gen_test_data1(array_raw_data): # Fixed transformation into sequences!!!
+    # concat is first
+    df = array_raw_data.iloc[1:]
+    df.columns = cols
+    df_temp = df.drop(["Date", 'NO2', 'O3'], axis=1)
+    df_temp = df_temp.astype(float)
+    for col in df_temp.columns:
+        df_temp[col] = df_temp[col].apply(scale_transformer, args=(settings_array[col],))
+    df_temp["Date"] = pd.to_datetime(df["Date"])
 
+    df_temp = df_temp[df_temp['Date'] > test_date].dropna(axis=0, how="any")
+
+
+
+    Y = df_temp['PM10']
+    X = df_temp[['RR', 'TN', 'TX', 'TM',
+                     'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']]
+    X_seq = np.array(gen_sequence(X))
+
+
+    X_np = np.array(X_seq)
+    Y_reshaped = Y.values.reshape(len(Y), 1)
+
+    Y_reshaped_resized = Y_reshaped[n_past + n_future - 1:len(Y_reshaped)]
+    return X_np, Y_reshaped_resized
 
 """
 NORMALISATION
@@ -171,9 +212,9 @@ def gen_sequence(df):
     return X_seq
 
 
-def test_station(station, cut):
+def test_station(data, station, cut):
 
-    train_data, test_data = separate_data(station, cut)
+    train_data, test_data = separate_data(data, cut)
 
     for col in salouel_data.columns:
         train_data[col] = train_data[col].apply(scale_transformer, args=(settings_array[col],))
@@ -255,52 +296,77 @@ def test_station(station, cut):
 
     index = (next(i for i, j in enumerate(arr_row_data) if j is roth_raw_data) + 1) % len(arr_row_data)  # gives index of the next element
 
-    Y_test, X_test = gen_test_data(arr_row_data[index])
-    np_X = np.array(gen_sequence(X_test))
-    print(X_test.head())
-    print(X_test.info())
-    print(np_X.shape)
+    X_test,Y_test = gen_test_data1(arr_row_data[index])
 
-    Y_test = Y_test[n_past + n_future - 1:len(Y_test)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
-    Y_test_np = np.array(Y_test.values.reshape(len(Y_test), 1))
-    scores_test = estimator.evaluate(np_X, Y_test_np, verbose=2)
-    print('\nMAE: {}'.format(scores_test[1]))
+
+
+    print(train_seq_merged_df.shape)
+    print(train_merged_label_array.shape)
+    print(np.array(X_test.shape))
+    print(Y_test.shape)
+
+
+
+    scores_test = estimator.evaluate(X_test, Y_test, verbose=2) # Here is a problem
+
     print('\nR^2: {}'.format(scores_test[2]))
+    print('\nMAE: {}'.format(scores_test[1]))
+    #print('\nR^2: {}'.format(scores_test[2]))
 
-    final_preds = estimator.predict(np_X)
+    #final_preds = estimator.predict(X_test)
+    #print(type(final_preds))
+
+    final_preds = estimator.predict(X_test)
     print(type(final_preds))
+    predicted_values = pd.DataFrame(final_preds)
+    predicted_reversed = predicted_values.apply(reverse_transformer, args=(settings_array["PM10"],)) # check reversed and actual data if they are reversed or not
+    Y_test = pd.DataFrame(Y_test)
+    Y_reversed = Y_test.apply(reverse_transformer, args=(settings_array["PM10"],)) # check reversed and actual data if they are reversed or not
 
 
-    fig_acc = plt.figure(figsize=(10, 10))
-    text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    plt.plot(history.history['r2_keras'])
-    plt.plot(history.history['val_r2_keras'])
-    plt.title('model r^2')
-    plt.ylabel('R^2')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    fig_verify = plt.figure(figsize=(100, 50))
+    plt.plot(predicted_reversed, color="blue")
+    plt.plot(Y_reversed, color="orange")
+    plt.title('prediction')
+    plt.ylabel('value')
+    plt.xlabel('row')
+    str_legend = 'station '+ str(key) + '\nR2 = ' + str(scores_test[2]) + '\nMSE = ' + str(scores_test[1])
+
+    first_legend = plt.legend(['predicted', 'actual data'], loc='upper left')
+
+    ax = plt.gca().add_artist(first_legend)
+
+    plt.legend([AnyObject()], [str_legend],
+               handler_map={AnyObject: AnyObjectHandler()})
+
     plt.show()
-    path_r2 = "./model_r2_" + text + ".png"
-    fig_acc.savefig(path_r2)
-    res = "Sequence length: " + str(n_past) + "\nNombre d'epochs: " + str(EPOCHS) + "\nBatch_size: " + str(BATCH_SIZE) + '\n' + col_string + '\nMAE: {}'.format(scores_test[1]) + '\nR^2: {}'.format(scores_test[2])
+    path_model_regression_verify = "./model_regression_verify_" + text + ".png"
+
+    fig_verify.savefig(path_model_regression_verify)
 
 
 
-    test_MSE = np.mean((final_preds - Y_test_np) ** 2)
-    test_MAE = np.mean(np.absolute(final_preds - Y_test_np))
-    test_RMSE = np.sqrt(np.mean((final_preds - Y_test_np) ** 2))
-    test_R2 = r2_keras(Y_test_np, final_preds)
-    print("Test mse is: ", test_MSE)
-    print("Test mae is: ", test_MAE)
-    print("Test rmse is: ", test_RMSE)
-    print("Test r2 is: ", test_R2)
-
-    write_results(res)
     os.remove(model_path_merged)
 
+    #write_results(res)
+    #os.remove(model_path_merged)
+
+
+
 #test_station(salouel_raw_data, False) # MAE: 0.045106929216720444 R^2: 0.17245528477276584
+
+dict = {'sal': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
+
+
+for key in dict.keys():
+    test_station(dict[key], key, False)
+    test_station(dict[key], key, True)
+
+
+"""
 
 
 for st in arr_row_data: # the best result is 2 -> saluel True
     test_station(st, False)
     test_station(st, True)
+"""
