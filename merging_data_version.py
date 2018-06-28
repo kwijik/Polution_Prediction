@@ -9,10 +9,11 @@ import keras
 from sklearn.metrics import confusion_matrix, recall_score, precision_score
 from keras.models import Sequential,load_model
 from keras.layers import Dense, Dropout, LSTM
-
+from sklearn.metrics import mean_squared_error
 from keras.layers.core import Activation
 import datetime
 import os
+from math import sqrt
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from Column_settings import *
@@ -26,11 +27,8 @@ text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def write_results(text):
-    #file = open("results.txt", "w")
-
     now = datetime.datetime.now()
-
-    with open("results.txt", "a") as file:
+    with open("reporting_file.txt", "a") as file:
         text = now.strftime("%Y-%m-%d %H:%M:%S") + ": " + "\n" + text + "\n" + "\n"
         file.write(text)
 
@@ -51,6 +49,11 @@ def r2_keras(y_true, y_pred):
     SS_res =  K.sum(K.square( y_true - y_pred ))
     SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
     return ( 1 - SS_res/(SS_tot + K.epsilon()))
+
+def rmse(y_true, y_pred):
+    """Root Mean Square Error
+    """
+    return sqrt(mean_squared_error( y_true, y_pred ))
 
 
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
@@ -231,8 +234,8 @@ EPOCHS = 100
 BATCH_SIZE = 200
 
 def calculate(cols):
-    copy_train_x_sc_data = train_x_scaled_data.drop(train_x_scaled_data.columns[cols],axis=1)
-    copy_test_x_sc_data = test_x_scaled_data.drop(test_x_scaled_data.columns[cols],axis=1)
+    copy_train_x_sc_data = train_x_scaled_data.drop(train_x_scaled_data.columns[cols], axis=1)
+    copy_test_x_sc_data = test_x_scaled_data.drop(test_x_scaled_data.columns[cols], axis=1)
 
 
     col_string = " ".join(str(x) for x in copy_train_x_sc_data.columns)
@@ -240,9 +243,13 @@ def calculate(cols):
     print("features sunt: ")
     print(col_string)
 
+
+
     train_seq_df = gen_sequence(copy_train_x_sc_data)
 
     test_seq_df = gen_sequence(copy_test_x_sc_data)
+
+
 
     print("length: ")
     #print(norm_train_df.head())
@@ -309,7 +316,22 @@ def calculate(cols):
         scores_test = estimator.evaluate(np.array(train_seq_np), np.array(train_label_array), verbose=2)
         print('\nMAE: {}'.format(scores_test[1]))
         print('\nR^2: {}'.format(scores_test[2]))
-        res = "Sequence length: " + str(n_past) + "\nNombre d'epochs: " + str(EPOCHS) + "\nBatch_size: " + str(BATCH_SIZE) + '\n' + col_string + '\nMAE: {}'.format(scores_test[1]) + '\nR^2: {}'.format(scores_test[2])
+
+        y_pred_test = estimator.predict(test_seq_np)
+        y_true_test = test_y_scaled_data
+
+        y_pred_test = pd.DataFrame(y_pred_test)
+
+        predicted_reversed = y_pred_test.apply(reverse_transformer, args=(settings_array["PM10"],))
+
+        y_true_test = pd.DataFrame(test_y_scaled_data)
+
+        rmse = sqrt(mean_squared_error(y_true_test, predicted_reversed))
+        print('Test RMSE: %.3f' % rmse)
+
+        res = "Sequence length: " + str(n_past) + "\nNombre d'epochs: " + str(EPOCHS) + "\nBatch_size: " + str(
+            BATCH_SIZE) + '\n' + col_string + '\nMAE: {}'.format(scores_test[1]) + '\nR^2: {}'.format(
+            scores_test[2]) + '\nTest RMSE: %.3f' % rmse
         write_results(res)
 
         #y_pred_test = estimator.predict(cr_seq)
@@ -364,7 +386,7 @@ def columnCombinations(colNum, col):
       calculate(col)
       last = col[len(col)-1]
       for i in range(last+1, colNum):
-         newCol = col[:]
+         newCol = col[:] # all eeettnts from array col
          newCol.append(i)
          columnCombinations(colNum, newCol)
 
