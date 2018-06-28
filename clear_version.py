@@ -96,8 +96,6 @@ salouel_data = salouel_data.dropna(axis=0, how="any")
 roth_data = roth_data.dropna(axis=0, how="any")
 
 merged_data = pd.concat([salouel_data, creil_data, roth_data])
-print("merged data goes here")
-print(merged_data.info())
 
 # Sorting by date, returns TrainModel, TestModel and Control dataframes
 def separate_data(df, df_raw):
@@ -146,6 +144,7 @@ def merge_data(array_raw_data):
         df_temp["Date"] = pd.to_datetime(df["Date"])
         arr_dfs.append(df_temp)
     cnc_df = pd.concat(arr_dfs).sort_values("Date").dropna(axis=0, how="any")
+    cnc_df = cnc_df[cnc_df['Date'] > '31/12/2010']
     train = cnc_df[cnc_df['Date'] < '31/12/2013'].drop("Date", axis=1)
     test = cnc_df[cnc_df['Date'] > '31/12/2013'].drop("Date", axis=1)
     return train, test
@@ -172,7 +171,6 @@ train_merge, test_merge = merge_data([salouel_raw_data, creil_raw_data, roth_raw
 NORMALISATION
 """
 
-print(salouel_data.head())
 for col in salouel_data.columns:
     salouel_data[col] = salouel_data[col].apply(scale_transformer, args=(settings_array[col],))
 
@@ -184,7 +182,6 @@ for col in train_merge.columns:
 for col in test_merge.columns:
     test_merge[col] = test_merge[col].apply(scale_transformer, args=(settings_array[col],))
 
-print(test_merge.head())
 
 
 
@@ -193,7 +190,6 @@ train_salouel_data, test_salouel_data = separate_data(salouel_data, salouel_raw_
 #salouel_data["PM10"] = salouel_data["PM10"].apply(reverse_transformer, args=(settings_array["PM10"],))
 
 
-print(train_salouel_data.head())
 
 
 
@@ -204,7 +200,6 @@ test_x_merged_scaled_data = test_merge.drop("PM10", axis=1)
 
 train_y_scaled_data = train_salouel_data['PM10']
 train_x_scaled_data = train_salouel_data.drop("PM10", axis=1)
-
 test_y_scaled_data = test_salouel_data['PM10']
 test_x_scaled_data = test_salouel_data.drop("PM10", axis=1)
 
@@ -234,13 +229,6 @@ test_seq_merged_df = np.array(gen_sequence(test_x_merged_scaled_data))
 
 train_seq_df = gen_sequence(train_x_scaled_data)
 test_seq_df = gen_sequence(test_x_scaled_data)
-
-
-
-print("length: ")
-#print(norm_train_df.head())
-#seq_array = np.array(seq_array)
-
 train_seq_np = np.array(train_seq_df)
 test_seq_np = np.array(test_seq_df)
 
@@ -279,21 +267,38 @@ print(model.summary())
 model_path_merged = './regression_model_merged.h5'
 
 
-train_label_array = train_y_scaled_data[n_past + n_future - 1:len(train_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
-test_y_scaled_data = test_y_scaled_data[n_past + n_future - 1:len(test_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
+train_merged_label_array = train_y_merged_scaled_data[n_past + n_future - 1:len(train_y_merged_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
+test_merged_y_scaled_data = test_y_merged_scaled_data[n_past + n_future - 1:len(test_y_merged_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
 
-train_label_array = train_y_scaled_data[n_past + n_future - 1:len(train_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
-test_y_scaled_data = test_y_scaled_data[n_past + n_future - 1:len(test_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
+train_label_array = train_y_merged_scaled_data[n_past + n_future - 1:len(train_y_merged_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
+test_y_scaled_data = test_y_merged_scaled_data[n_past + n_future - 1:len(test_y_merged_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
 
 
 EPOCHS = 100
 BATCH_SIZE = 200
 
+print("shape of testX :")
+print(test_seq_merged_df.shape)
 
-history = model.fit(train_seq_np, train_label_array, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(test_seq_np, test_y_scaled_data), verbose=2,
+print("shape of testY :")
+print(test_merged_y_scaled_data.shape)
+
+print("shape of trainX :")
+print(train_seq_merged_df.shape)
+
+print("shape of trainY :")
+print(train_merged_label_array.shape)
+
+history = model.fit(train_seq_merged_df, train_merged_label_array, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(test_seq_merged_df, test_merged_y_scaled_data), verbose=2,
           callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
-                       keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
+                       keras.callbacks.ModelCheckpoint(model_path_merged, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
           )
+
+
+estimator = load_model(model_path_merged, custom_objects={'r2_keras': r2_keras})
+scores_test = estimator.evaluate(np.array(train_seq_merged_df), np.array(train_merged_label_array), verbose=2)
+print('\nMAE: {}'.format(scores_test[1]))
+print('\nR^2: {}'.format(scores_test[2]))
 
 """
 
@@ -459,7 +464,7 @@ cr_y_scaled_data = cr_y_scaled_data[n_past + n_future - 1:len(cr_y_scaled_data)]
 
 """
 
-"""
+
 print("Shape of train_seq_np")
 print(np.array(train_seq_np).shape)
 
@@ -475,9 +480,8 @@ print(test_seq_np.shape)
 print("Shape of test_y_scaled_data")
 print(test_y_scaled_data.shape)
 
-
 if os.path.isfile(model_path):
-
+#if os.path.isfile(model_path_merged):
     #
     ##
     ###
@@ -534,3 +538,4 @@ if os.path.isfile(model_path):
 
     fig_verify.savefig(path_model_regression_verify)
     os.remove("./regression_model.h5")
+"""
