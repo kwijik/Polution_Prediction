@@ -17,7 +17,7 @@ def display_play(df_temp):
         fig, ax = plt.subplots()
         ax.plot(x, y, 'o')
         ax.set_title('plot of ' + col)
-        plt.show()
+        #plt.show()
 
     h_df = df_temp[df_temp['Season'] == 'H']
     p_df = df_temp[df_temp['Season'] == 'P']
@@ -29,7 +29,7 @@ def display_play(df_temp):
     summer = e_df['PM10'].mean()
     autaumn = a_df['PM10'].mean()
 
-    labels = 'winter', 'spring', 'summer', 'automn'
+    labels = 'winter: ' + str(winter), 'spring: ' + str(spring), 'summer: ' + str(summer), 'automn: ' + str(autaumn)
     sizes = [winter, spring, summer, autaumn]
     explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
 
@@ -38,4 +38,4 @@ def display_play(df_temp):
             shadow=True, startangle=90)
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
-    plt.show()
+    #plt.show()
