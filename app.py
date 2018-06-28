@@ -34,9 +34,15 @@ roth_raw_data = pd.read_csv("Moyennes_J_roth_2005_2015.csv", header=None, sep=';
 
 #print(salouel.info())
 
-"""
-Deleting dates column and making it all floats
-"""
+#def delete_missed_rows(nom_de_fichier):
+    #df_raw = pd.read_csv(nom_de_fichier, header=None, sep=';', decimal=',')
+    #columns = df_raw.columns
+    #df = prepare_data(df_raw)
+
+
+
+#Deleting dates column and making it all floats
+
 
 def prepare_data(df):
     df = df.iloc[1:]
@@ -54,16 +60,33 @@ salouel_data = prepare_data(salouel_raw_data)
 creil_data = prepare_data(creil_raw_data)
 roth_data = prepare_data(roth_raw_data)
 
+
+
+print("Before: ")
+
+print(creil_data.info())
+
+print("After: ")
+
+
+creil_data = creil_data.dropna(axis=0, how="any")
+
+salouel_data = salouel_data.dropna(axis=0, how="any")
+
+roth_data = roth_data.dropna(axis=0, how="any")
+print(salouel_data.info())
+
+
 """
 REPLACE MISSING VALUES BY AVERAGE OF CORRESPONDING VALUES 
-"""
+
 
 avg = np.nanmean([salouel_data.values, creil_data.values, roth_data.values], axis=0)
 
 for df in [salouel_data, creil_data, roth_data]:
     df[df.isnull()] = avg
 
-"""
+
 
 print("Salouel:")
 print(salouel_data.head())
@@ -145,7 +168,7 @@ norm_label_array = pd.DataFrame(min_max_scaler.fit_transform(label_array))
 
 
 
-sequence_length = 50
+sequence_length = 90
 
 
 def gen_sequence(df):
@@ -243,7 +266,8 @@ label_array = label_array[sequence_length:len(label_array)]
 norm_label_array = norm_label_array[sequence_length:len(norm_label_array)]
 
 """
-history = model.fit(seq_norm_df, norm_label_array, epochs=30, batch_size=200, validation_split=0.05, verbose=2,
+
+history = model.fit(seq_norm_df, norm_label_array, epochs=100, batch_size=200, validation_split=0.05, verbose=2,
           callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
                        keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
           )
@@ -266,6 +290,9 @@ print("it works!")
 New file goes here
 
 """
+
+def add_new_data(df):
+    train1, test1 = separate_data(roth_data, roth_raw_data)
 
 train1, test1 = separate_data(roth_data, roth_raw_data)
 
@@ -301,28 +328,59 @@ seq_norm_train = gen_sequence(norm_train_x)
 seq_norm_test = gen_sequence(norm_test_x)
 
 
+
+#####
+# Test drop of NaN values
+#####
+
+
+
 # if best iteration's model was saved then load and use it
 
 
+import datetime
+def write_results(text):
+    file = open("results.txt", "w")
+
+    now = datetime.datetime.now()
+
+    with open("test.txt", "a") as file:
+        text = now.strftime("%Y-%m-%d %H:%M:%S") + ": " + "\n" + text + "\n" + "\n"
+        file.write(text)
+
 if os.path.isfile(model_path):
-    estimator = load_model(model_path,custom_objects={'r2_keras': r2_keras})
+    estimator = load_model(model_path, custom_objects={'r2_keras': r2_keras})
 
     # test metrics
+    #inversed_train_y = min_max_scaler.inverse_transform(seq_norm_train)
+    #inversed_train_x = min_max_scaler.inverse_transform(norm_train_x)
+    #inversed_test_x = min_max_scaler.inverse_transform(seq_norm_test)
+    #inversed_test_y = min_max_scaler.inverse_transform(norm_test_y) # IMPORTANT!!!
+
+
     scores_test = estimator.evaluate(np.array(seq_norm_train), np.array(norm_train_y), verbose=2)
     print('\nMAE: {}'.format(scores_test[1]))
     print('\nR^2: {}'.format(scores_test[2]))
+    res = "Sequence length: " + str(sequence_length) + '\nMAE: {}'.format(scores_test[1]) + '\nR^2: {}'.format(scores_test[2])
+    write_results(res)
 
     y_pred_test = estimator.predict(np.array(seq_norm_test))
+
     y_true_test = np.array(norm_test_y)
 
-    test_set = pd.DataFrame(y_pred_test)
+    y_pred_test_inv = min_max_scaler.inverse_transform(y_pred_test)
+
+    y_true_test_inv = min_max_scaler.inverse_transform(y_true_test)
+
+
+    test_set = pd.DataFrame(y_pred_test_inv)
     test_set.to_csv('./submit_test.csv', index = None)
 
     # Plot in blue color the predicted data and in green color the
     # actual data to verify visually the accuracy of the model.
     fig_verify = plt.figure(figsize=(100, 50))
-    plt.plot(y_pred_test, color="blue")
-    plt.plot(y_true_test, color="green")
+    plt.plot(y_pred_test_inv, color="blue")
+    plt.plot(y_true_test_inv, color="green")
     plt.title('prediction')
     plt.ylabel('value')
     plt.xlabel('row')
