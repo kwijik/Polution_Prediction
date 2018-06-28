@@ -135,47 +135,41 @@ RETURN CORTÃ‰GE (TRAIN, TEST)
 
 #print(salouel_raw_data.iloc[1:].head())
 
+def merge_data(array_raw_data):
+    arr_dfs = []
+    # concat is first
+    for df in array_raw_data:
+        df = df.iloc[1:]
+        df.columns = cols
+        df_temp = df.drop(["Date", 'NO2', 'O3'], axis=1)
+        df_temp = df_temp.astype(float)
+        df_temp["Date"] = pd.to_datetime(df["Date"])
+        arr_dfs.append(df_temp)
+    cnc_df = pd.concat(arr_dfs).sort_values("Date").dropna(axis=0, how="any")
+    train = cnc_df[cnc_df['Date'] < '31/12/2013'].drop("Date", axis=1)
+    test = cnc_df[cnc_df['Date'] > '31/12/2013'].drop("Date", axis=1)
+    return train, test
+
+
+
 def separate_data(df, df_raw):
 
     df_raw = df_raw.iloc[1:]
     df_raw.columns = cols
 
     df["Date"] = pd.to_datetime(df_raw["Date"])
-    train = df[df['Date'] < '31/12/2013'].drop("Date", axis=1)
+    train = df[df['Date'] < '31/12/2014'].drop("Date", axis=1)
 
-    test = df[df['Date'] > '31/12/2013'].drop("Date", axis=1)
+    test = df[df['Date'] > '31/12/2014'].drop("Date", axis=1)
     return train, test
 
 
-
-
-print("Train data: ")
-
-
-label_array = np.array(salouel_data["PM10"])
-#salouel_data = salouel_data.drop("PM10", axis=1)
-
-
-#label_array = np.array(label_array)
-
+train_merge, test_merge = merge_data([salouel_raw_data, creil_raw_data, roth_raw_data])
 
 
 
 """
 NORMALISATION
-"""
-#label_array = label_array.reshape(len(label_array), 1) # [ [y1] [y2] [y3]... ]
-
-
-print("Label array goes here")
-
-#print(label_array)
-"""
-min_max_scaler = preprocessing.MinMaxScaler()
-#norm_train_df = pd.DataFrame(min_max_scaler.fit_transform(train_salouel), columns=train_salouel.columns)
-#norm_test_df = pd.DataFrame(min_max_scaler.fit_transform(test_salouel), columns=test_salouel.columns)
-norm_df = pd.DataFrame(min_max_scaler.fit_transform(salouel_data), columns=salouel_data.columns)
-norm_label_array = pd.DataFrame(min_max_scaler.fit_transform(label_array))
 """
 
 print(salouel_data.head())
@@ -183,7 +177,16 @@ for col in salouel_data.columns:
     salouel_data[col] = salouel_data[col].apply(scale_transformer, args=(settings_array[col],))
 
 
-print(salouel_data.head())
+for col in train_merge.columns:
+    train_merge[col] = train_merge[col].apply(scale_transformer, args=(settings_array[col],))
+
+
+for col in test_merge.columns:
+    test_merge[col] = test_merge[col].apply(scale_transformer, args=(settings_array[col],))
+
+print(test_merge.head())
+
+
 
 train_salouel_data, test_salouel_data = separate_data(salouel_data, salouel_raw_data)
 
@@ -194,6 +197,10 @@ print(train_salouel_data.head())
 
 
 
+train_y_merged_scaled_data = train_merge['PM10']
+train_x_merged_scaled_data = train_merge.drop("PM10", axis=1)
+test_y_merged_scaled_data = test_merge['PM10']
+test_x_merged_scaled_data = test_merge.drop("PM10", axis=1)
 
 train_y_scaled_data = train_salouel_data['PM10']
 train_x_scaled_data = train_salouel_data.drop("PM10", axis=1)
@@ -221,9 +228,11 @@ print("features sunt: ")
 print(col_string)
 
 
+train_seq_merged_df = np.array(gen_sequence(train_x_merged_scaled_data))
+test_seq_merged_df = np.array(gen_sequence(test_x_merged_scaled_data))
+
 
 train_seq_df = gen_sequence(train_x_scaled_data)
-
 test_seq_df = gen_sequence(test_x_scaled_data)
 
 
@@ -237,13 +246,16 @@ test_seq_np = np.array(test_seq_df)
 
 #y_scaled_data
 
+train_y_merged_scaled_data = train_y_merged_scaled_data.values.reshape(len(train_y_merged_scaled_data), 1) # [ [] [] []]
+test_y_merged_scaled_data = test_y_merged_scaled_data.values.reshape(len(test_y_merged_scaled_data), 1)
+
 
 train_y_scaled_data = train_y_scaled_data.values.reshape(len(train_y_scaled_data), 1) # [ [] [] []]
 test_y_scaled_data = test_y_scaled_data.values.reshape(len(test_y_scaled_data), 1)
 
 nb_features = train_seq_np.shape[2]
 
-
+nb_features_merged = train_seq_merged_df.shape[2]
 
 model = Sequential()
 model.add(LSTM(
@@ -262,9 +274,13 @@ model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['mae', r2
 print(model.summary())
 
 
-model_path = './regression_model.h5'
+#model_path = './regression_model.h5'
 
-label_array = label_array[n_past:len(label_array)]
+model_path_merged = './regression_model_merged.h5'
+
+
+train_label_array = train_y_scaled_data[n_past + n_future - 1:len(train_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
+test_y_scaled_data = test_y_scaled_data[n_past + n_future - 1:len(test_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
 
 train_label_array = train_y_scaled_data[n_past + n_future - 1:len(train_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
 test_y_scaled_data = test_y_scaled_data[n_past + n_future - 1:len(test_y_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
@@ -279,8 +295,15 @@ history = model.fit(train_seq_np, train_label_array, epochs=EPOCHS, batch_size=B
                        keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
           )
 
-
 """
+
+history = model.fit(train_seq_np, train_label_array, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(test_seq_np, test_y_scaled_data), verbose=2,
+          callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
+                       keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
+          )
+
+
+
 
 history = model.fit(seq_array, label_array, epochs=30, batch_size=200, validation_split=0.05, verbose=2,
           callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
