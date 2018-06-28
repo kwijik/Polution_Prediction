@@ -15,7 +15,7 @@ import datetime
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from math import sqrt
-
+from sklearn.metrics import r2_score
 from Column_settings import *
 
 
@@ -37,7 +37,6 @@ class AnyObjectHandler(object):
 np.random.seed(7)
 
 #changed all , by . in cvs files
-text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def write_results(text):
     #file = open("results.txt", "w")
@@ -181,12 +180,13 @@ for col in salouel_data.columns:
 #salouel_data["PM10"] = salouel_data["PM10"].apply(reverse_transformer, args=(settings_array["PM10"],))
 
 separation_date = '31/12/2009'
-test1_until_train = '31/12/2013'
-
+begin_test = '01/01/2015'
 test_date = '31/12/2014'
-
+begin_date = '01/01/2005'
+final_date = '31/12/2015'
 
 def separate_data(array_raw_data, cut):
+    global begin_date
     # concat is first
     df = array_raw_data.iloc[1:]
     df.columns = cols
@@ -195,10 +195,12 @@ def separate_data(array_raw_data, cut):
     df_temp["Date"] = pd.to_datetime(df["Date"])
     if cut == True:
         df_temp = df_temp[df_temp['Date'] > separation_date]
-
+        begin_date = '01/01/2010'
+    else:
+        begin_date = '01/01/2005'
     #df_temp["Date"] = pd.to_datetime(df["Date"])
-    train = df_temp[df_temp['Date'] < test1_until_train].drop("Date", axis=1).dropna(axis=0, how="any")
-    test = df_temp[df_temp['Date'] > test1_until_train].drop("Date", axis=1).dropna(axis=0, how="any")
+    train = df_temp[df_temp['Date'] < test_date].drop("Date", axis=1).dropna(axis=0, how="any")
+    test = df_temp[df_temp['Date'] > test_date].drop("Date", axis=1).dropna(axis=0, how="any")
     return train, test
 
 
@@ -213,6 +215,7 @@ def gen_sequence(df):
 
 
 def test_station(data, station, cut):
+    text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     train_data, test_data = separate_data(data, cut)
 
@@ -246,6 +249,7 @@ def test_station(data, station, cut):
 
     nb_features_merged = train_seq_merged_df.shape[2]
 
+
     model = Sequential()
     model.add(LSTM(
              input_shape=(n_past, nb_features),
@@ -258,8 +262,13 @@ def test_station(data, station, cut):
     model.add(Dropout(0.2))
     model.add(Dense(units=1))
     model.add(Activation("linear"))
-    model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=['mae', r2_keras])
-
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae', r2_keras])
+    """
+    model = Sequential()  # <- this model works better
+    model.add(LSTM(50, input_shape=(n_past, nb_features)))
+    model.add(Dense(1))
+    model.compile(loss='mae', optimizer='adam')
+"""
     print(model.summary())
 
 
@@ -309,8 +318,9 @@ def test_station(data, station, cut):
 
     scores_test = estimator.evaluate(X_test, Y_test, verbose=2) # Here is a problem
 
-    print('\nR^2: {}'.format(scores_test[2]))
-    print('\nMAE: {}'.format(scores_test[1]))
+
+    #print('\nR^2: {}'.format(scores_test[2]))
+    #print('\nMAE: {}'.format(scores_test[1]))
     #print('\nR^2: {}'.format(scores_test[2]))
 
     #final_preds = estimator.predict(X_test)
@@ -323,39 +333,46 @@ def test_station(data, station, cut):
     Y_test = pd.DataFrame(Y_test)
     Y_reversed = Y_test.apply(reverse_transformer, args=(settings_array["PM10"],)) # check reversed and actual data if they are reversed or not
 
+    mse = np.mean((predicted_reversed - Y_reversed) ** 2)
 
-    fig_verify = plt.figure(figsize=(100, 50))
+    rmse = sqrt(mean_squared_error(Y_reversed, predicted_reversed))
+
+    print('Test MSE: ' + str(mse))
+    print('Variance score: {:2f}'.format(r2_score(Y_reversed, predicted_reversed)))
+
+    fig_verify = plt.figure()
     plt.plot(predicted_reversed, color="blue")
     plt.plot(Y_reversed, color="orange")
-    plt.title('prediction')
+    plt.title('LSTM1 Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date)
     plt.ylabel('value')
     plt.xlabel('row')
-    str_legend = 'station '+ str(key) + '\nR2 = ' + str(scores_test[2]) + '\nMSE = ' + str(scores_test[1])
+    str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(Y_reversed, predicted_reversed)) + '\nMSE = ' + str(mse.item())
+    #str_data = 'Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date
+    first_legend = plt.legend(['predicted', 'actual data'] , loc='upper right')
+    #dates_legend = plt.legend([str_data], loc='upper center')
 
-    first_legend = plt.legend(['predicted', 'actual data'], loc='upper left')
 
     ax = plt.gca().add_artist(first_legend)
+
+    #ay = plt.gca().add_artist(dates_legend)
+
 
     plt.legend([AnyObject()], [str_legend],
                handler_map={AnyObject: AnyObjectHandler()})
 
-    plt.show()
-    path_model_regression_verify = "./model_regression_verify_" + text + ".png"
+    #plt.show()
+    path_model_regression_verify = "./LSTM1_lille" + text + ".png"
 
     fig_verify.savefig(path_model_regression_verify)
 
-
-
+    write_results(str_legend)
     os.remove(model_path_merged)
-
-    #write_results(res)
-    #os.remove(model_path_merged)
 
 
 
 #test_station(salouel_raw_data, False) # MAE: 0.045106929216720444 R^2: 0.17245528477276584
 
-dict = {'sal': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
+dict = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
 
 for key in dict.keys():

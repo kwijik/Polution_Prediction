@@ -5,8 +5,40 @@ import seaborn as sns
 
 #df = pd.read_csv('./PRSA_data_2010.1.1-2014.12.31.csv')
 
+import datetime
+import matplotlib.patches as mpatches
 
+np.random.seed(7)
+
+text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+class AnyObject(object):
+    pass
+
+class AnyObjectHandler(object):
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        width, height = handlebox.width, handlebox.height
+        patch = mpatches.Rectangle([x0, y0], width, height, facecolor='red',
+                                   edgecolor='black', hatch='xx', lw=3,
+                                   transform=handlebox.get_transform())
+        handlebox.add_artist(patch)
+        return patch
+
+def r2_keras(y_true, y_pred):
+    """Coefficient of Determination
+    """
+    SS_res =  np.sum(np.square( y_true - y_pred ))
+    SS_tot = np.sum(np.square( y_true - np.mean(y_true) ) )
+    return ( 1 - SS_res/(SS_tot + np.finfo(float).tiny))
+
+station_name = "Salouel"
 df_raw = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
+#df_raw = pd.read_csv("Moyennes_J_creil_2005_2015.csv", header=None, sep=';', decimal=',')
+#df_raw = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
+
+
 print(df_raw.head())
 
 cols_to_plot = ['PM10', 'RR', 'TN', 'TX', 'TM',
@@ -40,20 +72,34 @@ for col in cols_to_plot:
     i += 1
 plt.show()
 
-def separate_data(df, df_raw):
 
-    df_raw = df_raw.iloc[1:]
-    df_raw.columns = cols
+separation_date = '31/12/2009'
+begin_test = '01/01/2015'
+test_date = '31/12/2014'
+begin_date = '01/01/2005'
+final_date = '31/12/2015'
+cut = True
 
-    df["Date"] = pd.to_datetime(df_raw["Date"])
-    train = df[df['Date'] < '31/12/2014']
-    train = train[train['Date'] > '31/12/2009'].drop("Date", axis=1)
-
-    test = df[df['Date'] > '31/12/2014'].drop("Date", axis=1)
+def separate_data(array_raw_data, cut):
+    global begin_date
+    # concat is first
+    df = array_raw_data.iloc[1:]
+    df.columns = cols
+    df_temp = df.drop(["Date", 'NO2', 'O3'], axis=1)
+    df_temp = df_temp.astype(float)
+    df_temp["Date"] = pd.to_datetime(df["Date"])
+    if cut == True:
+        df_temp = df_temp[df_temp['Date'] > separation_date]
+        begin_date = '01/01/2010'
+    else:
+        begin_date = '01/01/2005'
+    #df_temp["Date"] = pd.to_datetime(df["Date"])
+    train = df_temp[df_temp['Date'] < test_date].drop("Date", axis=1).dropna(axis=0, how="any")
+    test = df_temp[df_temp['Date'] > test_date].drop("Date", axis=1).dropna(axis=0, how="any")
     return train, test
 
 
-df_train, df_test = separate_data(df, df_raw)
+df_train, df_test = separate_data(df_raw, cut)
 
 # print(df_train.info()) # 2086 1767
 
@@ -344,7 +390,7 @@ with tf.Session() as sess:
         feed_dict = {rnn_model['enc_inp'][t]: batch_input[:, t] for t in range(input_seq_len)}
         feed_dict.update({rnn_model['target_seq'][t]: batch_output[:, t] for t in range(output_seq_len)})
         _, loss_t = sess.run([rnn_model['train_op'], rnn_model['loss']], feed_dict)
-        print(loss_t)
+        #print(loss_t)
 
     temp_saver = rnn_model['saver']()
     save_path = temp_saver.save(sess, os.path.join('./', 'mv_ts_pollution_case'))
@@ -367,15 +413,89 @@ with tf.Session() as sess:
     final_preds = [np.expand_dims(pred, 1) for pred in final_preds]
     final_preds = np.concatenate(final_preds, axis=1)
     print("Test mse is: ", np.mean((final_preds - test_y) ** 2))
+    print("Test mae is: ", np.mean(np.absolute(final_preds - test_y)))
+    print("Test rmse is: ", np.sqrt(np.mean((final_preds - test_y) ** 2)))
+    print("Test r2 is: ", r2_keras(test_y, final_preds))
 
 ## remove duplicate hours and concatenate into one long array
 test_y_expand = np.concatenate([test_y[i].reshape(-1) for i in range(0, test_y.shape[0], 5)], axis = 0)
 final_preds_expand = np.concatenate([final_preds[i].reshape(-1) for i in range(0, final_preds.shape[0], 5)], axis = 0)
 
-plt.plot(final_preds_expand, color = 'orange', label = 'predicted')
-plt.plot(test_y_expand, color = 'blue', label = 'actual')
-plt.title("test data - one month")
-plt.legend(loc="upper left")
-plt.show()
-plt.savefig('prediction')
+"""
+fig_verify = plt.figure()
+plt.plot(final_preds_expand, color="blue")
+plt.plot(test_y_expand, color="orange")
+plt.title('Seq2seq prediction')
+plt.ylabel('value')
+plt.xlabel('row')
 
+str_legend =  'R2 = ' + str(r2_keras(test_y, final_preds)) + '\nMSE = ' + str(np.mean((final_preds - test_y) ** 2))
+#str_data = 'Train :' + begin_date + ' - ' + test_date + '\nTest :' + begin_test + ' - ' + final_date
+first_legend = plt.legend(['predicted', 'actual data'], loc='upper left')
+#dates_legend = plt.legend([str_data], loc='upper center')
+
+plt.gca().add_artist(first_legend)
+
+#plt.gca().add_artist(dates_legend)
+
+plt.legend([AnyObject()], [str_legend],
+           handler_map={AnyObject: AnyObjectHandler()})
+
+# plt.show()
+path_model_regression_verify = "./model_regression_verify_" + text + ".png"
+
+fig_verify.savefig(path_model_regression_verify)
+
+plt.show()
+
+
+fig_verify = plt.figure()
+plt.plot(final_preds_expand, color="blue")
+plt.plot(test_y_expand, color="orange")
+plt.title('Sea2seq Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date)
+plt.ylabel('value')
+plt.xlabel('row')
+str_legend = 'station: ' + station_name + '\nR2 = ' + str(r2_keras(test_y, final_preds)) + '\nMSE = ' + str(np.mean((final_preds - test_y) ** 2))
+#str_data = 'Train :' + begin_date + ' - ' + test_date + '\nTest :' + begin_test + ' - ' + final_date
+first_legend = plt.legend(['predicted', 'actual data'], loc='upper right')
+#dates_legend = plt.legend([str_data], loc=9, bbox_to_anchor=(0.5, -0.1))
+
+plt.gca().add_artist(first_legend)
+
+#ay = plt.gca().add_artist(dates_legend)
+
+plt.legend([AnyObject()], [str_legend],
+           handler_map={AnyObject: AnyObjectHandler()})
+
+# plt.show()
+path_model_regression_verify = "./Seq2seq_lille" + text + ".png"
+
+fig_verify.savefig(path_model_regression_verify)
+"""
+fig_verify = plt.figure()
+plt.plot(final_preds_expand, color="blue")
+plt.plot(test_y_expand, color="orange")
+plt.title('Seq2sea Train :' + begin_date + ' - ' + test_date + '\nTest :' + begin_test + ' - ' + final_date)
+plt.ylabel('value')
+plt.xlabel('row')
+str_legend = 'station: ' + str(station_name) + '\nR2 = ' + str(r2_keras(test_y, final_preds)) + '\nMSE = ' + str(np.mean((final_preds - test_y) ** 2))
+# str_data = 'Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date
+first_legend = plt.legend(['predicted', 'actual data'], loc='upper left')
+# dates_legend = plt.legend([str_data], loc='upper center')
+
+
+ax = plt.gca().add_artist(first_legend)
+
+# ay = plt.gca().add_artist(dates_legend)
+
+
+plt.legend([AnyObject()], [str_legend],
+           handler_map={AnyObject: AnyObjectHandler()})
+
+# plt.show()
+path_model_regression_verify = "./Seq2sea_lille" + text + ".png"
+
+fig_verify.savefig(path_model_regression_verify)
+
+#write_results(str_legend)
+#os.remove(model_path_merged)
