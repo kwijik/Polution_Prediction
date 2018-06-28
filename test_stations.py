@@ -103,16 +103,27 @@ merged_data = pd.concat([salouel_data, creil_data, roth_data])
 
 
 """
-SEPARATE DF INTO TRAIN AND TEST DATA
-TRAIN IS 2005 - 2013
-TEST IS 2014 AND 2015
+Cut data until test_date
 
-RETURN CORTÃ‰GE (TRAIN, TEST)
+Returen Y and X
+
 """
-#print("Number of columns: ")
-#print(len(cols))
+test_date = '31/12/2014'
 
-#print(salouel_raw_data.iloc[1:].head())
+def gen_test_data(array_raw_data):
+    # concat is first
+    df = array_raw_data.iloc[1:]
+    df.columns = cols
+    df_temp = df.drop(["Date", 'NO2', 'O3'], axis=1)
+    df_temp = df_temp.astype(float)
+    df_temp["Date"] = pd.to_datetime(df["Date"])
+
+    df_temp = df_temp[df_temp['Date'] > test_date].dropna(axis=0, how="any")
+
+    Y = df_temp['PM10']
+    X = df_temp[['RR', 'TN', 'TX', 'TM',
+                     'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']]
+    return Y, X
 
 
 
@@ -256,12 +267,16 @@ def test_station(station, cut):
 
 
     estimator = load_model(model_path_merged, custom_objects={'r2_keras': r2_keras})
-    scores_test = estimator.evaluate(np.array(test_seq_merged_df), np.array(test_merged_y_scaled_data), verbose=2)
+
+    index = (next(i for i, j in enumerate(arr_row_data) if j is roth_raw_data) + 1) % len(arr_row_data)  # gives index of the next element
+
+    Y_test, X_test = gen_test_data(arr_row_data[index])
+
+    scores_test = estimator.evaluate(np.array(gen_sequence(X_test)), np.array(Y_test.values.reshape(len(Y_test), 1)), verbose=2)
     print('\nMAE: {}'.format(scores_test[1]))
     print('\nR^2: {}'.format(scores_test[2]))
 
-
-    pred = estimator.predict()
+    final_preds = estimator.predict()
 
 
     fig_acc = plt.figure(figsize=(10, 10))
@@ -279,10 +294,10 @@ def test_station(station, cut):
 
 
 
-    test_MSE = np.mean((final_preds - test_y) ** 2)
-    test_MAE = np.mean(np.absolute(final_preds - test_y))
-    test_RMSE = np.sqrt(np.mean((final_preds - test_y) ** 2))
-    test_R2 = r2_keras(test_y, final_preds)
+    test_MSE = np.mean((final_preds - Y_test) ** 2)
+    test_MAE = np.mean(np.absolute(final_preds - Y_test))
+    test_RMSE = np.sqrt(np.mean((final_preds - Y_test) ** 2))
+    test_R2 = r2_keras(Y_test, final_preds)
     print("Test mse is: ", test_MSE)
     print("Test mae is: ", test_MAE)
     print("Test rmse is: ", test_RMSE)
