@@ -14,7 +14,7 @@ from sklearn.model_selection import GridSearchCV
 from keras.wrappers.scikit_learn import KerasRegressor
 
 from keras.layers.core import Activation
-
+import datetime
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -127,8 +127,6 @@ def separate_data(df, df_raw):
 
     test = df[df['Date'] > '31/12/2013'].drop("Date", axis=1)
     return train, test
-
-
 
 
 print("Train data: ")
@@ -267,24 +265,26 @@ def create_model():
 model_path = './regression_model.h5'
 label_array = label_array[sequence_length:len(label_array)]
 
+norm_label_array = norm_label_array[sequence_length:len(norm_label_array)]
 
 
+
+model = create_model()
+
+epochs = 100
+
+batch_size = 100
 
 
 #print(model.summary())
 
 
-model_path = './regression_model.h5'
-
-label_array = label_array[sequence_length:len(label_array)]
-
-norm_label_array = norm_label_array[sequence_length:len(norm_label_array)]
 """
 
 model = KerasRegressor(build_fn=create_model, verbose=0)
 
 batch_size = [10, 20, 40, 60, 80, 100]
-epochs = [10, 50, 100, 150, 200]
+epochs = [10, 25, 50, 100, 150, 200]
 
 param_grid = dict(batch_size=batch_size, epochs=epochs)
 
@@ -299,21 +299,21 @@ stds = grid_result.cv_results_['std_test_score']
 params = grid_result.cv_results_['params']
 for mean, stdev, param in zip(means, stds, params):
     print("%f (%f) with: %r" % (mean, stdev, param))
-"""
+
 #for bs in batch_size_array:
 
-model = create_model()
 
-epochs = 100
+"""
 
-batch_size = 100
 
-history = model.fit(seq_norm_df, norm_label_array, epochs=epochs, batch_size=batch_size, validation_split=0.1, verbose=2,
+"""
+
+history = model.fit(seq_norm_df, norm_label_array, epochs=epochs, batch_size=batch_size, validation_split=0.2, verbose=2,
           callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
                        keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
           )
 
-"""
+
 history = model.fit(seq_array, label_array, epochs=30, batch_size=200, validation_split=0.05, verbose=2,
           callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
                        keras.callbacks.ModelCheckpoint(model_path, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
@@ -326,9 +326,14 @@ print("it works!")
 
 # R2 plot
 
+text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+
+
+"""
 
 fig_acc = plt.figure(figsize=(10, 10))
+text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 plt.plot(history.history['r2_keras'])
 plt.plot(history.history['val_r2_keras'])
 plt.title('model r^2')
@@ -336,7 +341,8 @@ plt.ylabel('R^2')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.show()
-fig_acc.savefig("./model_r2.png")
+path_r2 = "./model_r2_" + text + ".png"
+fig_acc.savefig(path_r2)
 
 
 
@@ -349,7 +355,8 @@ plt.ylabel('MAE')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.show()
-fig_acc.savefig("./model_mae.png")
+path_mae = "./model_mae_" + text + ".png"
+fig_acc.savefig(path_mae)
 
 # summarize history for Loss
 fig_acc = plt.figure(figsize=(10, 10))
@@ -360,7 +367,8 @@ plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.show()
-fig_acc.savefig("./model_regression_loss.png")
+path_reg_loss = "./model_regression_loss_" + text + ".png"
+fig_acc.savefig(path_reg_loss)
 
 
 
@@ -416,7 +424,7 @@ seq_norm_test = gen_sequence(norm_test_x)
 # if best iteration's model was saved then load and use it
 
 
-import datetime
+"""
 def write_results(text):
     file = open("results.txt", "w")
 
@@ -425,6 +433,8 @@ def write_results(text):
     with open("test.txt", "a") as file:
         text = now.strftime("%Y-%m-%d %H:%M:%S") + ": " + "\n" + text + "\n" + "\n"
         file.write(text)
+
+"""
 
 if os.path.isfile(model_path):
     estimator = load_model(model_path, custom_objects={'r2_keras': r2_keras})
@@ -464,12 +474,56 @@ if os.path.isfile(model_path):
     plt.xlabel('row')
     plt.legend(['predicted', 'actual data'], loc='upper left')
     plt.show()
-    fig_verify.savefig("./model_regression_verify.png")
+    path_model_regression_verify = "./model_regression_verify_" + text + ".png"
+
+    fig_verify.savefig(path_model_regression_verify)
     
+"""
     
-def make_prediction(df):
-        estimator = load_model(model_path, custom_objects={'r2_keras': r2_keras})
-        # here goes separation data into X and Y, normalization, etc
-        y_pred_test = estimator.predict(np.array(df_x))
+def make_prediction(df_raw):
+    estimator = load_model(model_path, custom_objects={'r2_keras': r2_keras})
+    
+    # here goes separation data into X and Y, normalization, etc
+    df = prepare_data(df_raw)
+    df = df.dropna(axis=0, how="any")
+    train, test = separate_data(df, df_raw)
+    
+    array_y = np.array(test["PM10"])
+    
+    x = test.drop("PM10", axis=1)
+    #label_array = array_y.reshape(len(array_y), 1)
+    
+    norm_df = pd.DataFrame(min_max_scaler.fit_transform(x), columns=x.columns)
+    #norm_label_array = pd.DataFrame(min_max_scaler.fit_transform(label_array))
+    array_y = array_y[sequence_length:len(array_y)]
+    seq_norm_test = gen_sequence(norm_df)
+
+    estimator = load_model(model_path, custom_objects={'r2_keras': r2_keras})
+    y_pred_test = estimator.predict(np.array(seq_norm_test))
+
+    y_pred_test = pd.DataFrame(y_pred_test)
+    
+    y_pred_test_inv = min_max_scaler.inverse_transform(y_pred_test)
+
+    
+    test_set = pd.DataFrame(y_pred_test_inv)
+    path = './submit_test_' + text + '.csv'
+    test_set.to_csv(path, index = None)
 
 
+    fig_verify = plt.figure(figsize=(100, 50))
+    plt.plot(y_pred_test_inv, color="blue")
+    plt.plot(array_y, color="green")
+    plt.title('prediction')
+    plt.ylabel('value')
+    plt.xlabel('row')
+    plt.legend(['predicted', 'actual data'], loc='upper left')
+    plt.show()
+    path_model_regression_verify = "./model_regression_verify_" + text + ".png"
+
+    fig_verify.savefig(path_model_regression_verify)
+
+    
+    
+
+make_prediction(creil_raw_data)
