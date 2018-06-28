@@ -131,6 +131,7 @@ for col in salouel_data.columns:
 separation_date = '31/12/2009'
 test1_until_train = '31/12/2013'
 
+test_date = '31/12/2014'
 
 
 def separate_data(array_raw_data, cut):
@@ -143,10 +144,25 @@ def separate_data(array_raw_data, cut):
     if cut == True:
         df_temp = df_temp[df_temp['Date'] > separation_date]
 
-    df_temp["Date"] = pd.to_datetime(df["Date"])
+    #df_temp["Date"] = pd.to_datetime(df["Date"])
     train = df_temp[df_temp['Date'] < test1_until_train].drop("Date", axis=1).dropna(axis=0, how="any")
     test = df_temp[df_temp['Date'] > test1_until_train].drop("Date", axis=1).dropna(axis=0, how="any")
     return train, test
+
+
+def gen_test_data(array_raw_data):
+    # concat is first
+    df = array_raw_data.iloc[1:]
+    df.columns = cols
+    df_temp = df.drop(["Date", 'NO2', 'O3'], axis=1)
+    df_temp = df_temp.astype(float)
+    df_temp["Date"] = pd.to_datetime(df["Date"])
+
+    df_temp = df_temp[df_temp['Date'] > test_date].dropna(axis=0, how="any")
+
+    Y = df_temp['PM10']
+    X = df_temp.drop('PM10', axis=1)
+    return Y, X
 
 n_past = 90
 n_future = 0
@@ -240,9 +256,13 @@ def test_station(station, cut):
 
 
     estimator = load_model(model_path_merged, custom_objects={'r2_keras': r2_keras})
-    scores_test = estimator.evaluate(np.array(train_seq_merged_df), np.array(train_merged_label_array), verbose=2)
+    scores_test = estimator.evaluate(np.array(test_seq_merged_df), np.array(test_merged_y_scaled_data), verbose=2)
     print('\nMAE: {}'.format(scores_test[1]))
     print('\nR^2: {}'.format(scores_test[2]))
+
+
+    pred = estimator.predict()
+
 
     fig_acc = plt.figure(figsize=(10, 10))
     text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -257,13 +277,23 @@ def test_station(station, cut):
     fig_acc.savefig(path_r2)
     res = "Sequence length: " + str(n_past) + "\nNombre d'epochs: " + str(EPOCHS) + "\nBatch_size: " + str(BATCH_SIZE) + '\n' + col_string + '\nMAE: {}'.format(scores_test[1]) + '\nR^2: {}'.format(scores_test[2])
 
+
+
+    test_MSE = np.mean((final_preds - test_y) ** 2)
+    test_MAE = np.mean(np.absolute(final_preds - test_y))
+    test_RMSE = np.sqrt(np.mean((final_preds - test_y) ** 2))
+    test_R2 = r2_keras(test_y, final_preds)
+    print("Test mse is: ", test_MSE)
+    print("Test mae is: ", test_MAE)
+    print("Test rmse is: ", test_RMSE)
+    print("Test r2 is: ", test_R2)
+
     write_results(res)
     os.remove(model_path_merged)
 
-test_station(salouel_raw_data, False) # MAE: 0.045106929216720444 R^2: 0.17245528477276584
-"""
+#test_station(salouel_raw_data, False) # MAE: 0.045106929216720444 R^2: 0.17245528477276584
+
 
 for st in arr_row_data: # the best result is 2 -> saluel True
     test_station(st, False)
     test_station(st, True)
-"""

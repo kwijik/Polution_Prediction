@@ -1,12 +1,10 @@
 import pandas as pd
 import numpy as np
-import keras
-import keras.backend as K
+
 import datetime
 import os
 
 import matplotlib.pyplot as plt
-
 
 from tensorflow.contrib import rnn
 from tensorflow.python.ops import variable_scope
@@ -32,9 +30,9 @@ def write_results(text):
 def r2_keras(y_true, y_pred):
     """Coefficient of Determination
     """
-    SS_res =  K.sum(K.square( y_true - y_pred ))
-    SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
-    return ( 1 - SS_res/(SS_tot + K.epsilon()))
+    SS_res =  np.sum(np.square( y_true - y_pred ))
+    SS_tot = np.sum(np.square( y_true - np.mean(y_true) ) )
+    return ( 1 - SS_res/(SS_tot + np.finfo(float).tiny))
 
 
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
@@ -384,12 +382,14 @@ def test_station(station, cut):
 
         final_preds = [np.expand_dims(pred, 1) for pred in final_preds]
         final_preds = np.concatenate(final_preds, axis=1)
+        test_MSE = np.mean((final_preds - test_y) ** 2)
         test_MAE = np.mean(np.absolute(final_preds - test_y))
-
-        print("Test mse is: ", np.mean((final_preds - test_y) ** 2))
+        test_RMSE = np.sqrt(np.mean((final_preds - test_y) ** 2))
+        test_R2 = r2_keras(test_y, final_preds)
+        print("Test mse is: ", test_MSE)
         print("Test mae is: ", test_MAE)
-        print("Test rmse is: ", np.sqrt(np.mean((final_preds - test_y) ** 2)))
-        print("Test r2 is: ", r2_keras(test_y, final_preds))
+        print("Test rmse is: ", test_RMSE)
+        print("Test r2 is: ", test_R2)
 
     ## remove duplicate hours and concatenate into one long array
     test_y_expand = np.concatenate([test_y[i].reshape(-1) for i in range(0, test_y.shape[0], 5)], axis=0)
@@ -399,10 +399,13 @@ def test_station(station, cut):
     plt.plot(test_y_expand, color='blue', label='actual')
     plt.title("test data - one month")
     plt.legend(loc="upper left")
-    plt.show()
+    #plt.show()
     plt.savefig('prediction')
+    res = "MSE: " + str(test_MSE) + "\nMAE: " + str(test_MAE) +  "\nRMSE: " + str(test_RMSE) + "\nR2: " + str(test_R2)
     write_results(res)
-    os.remove(model_path_merged)
+
+    if os.path.isfile("./regression_model_merged.h5"):
+        os.remove("./regression_model_merged.h5")
 
 
 
