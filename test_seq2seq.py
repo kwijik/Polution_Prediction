@@ -21,7 +21,8 @@ from pollution_plots import *
 
 import matplotlib.patches as mpatches
 
-def plot_test(final_preds_expand, test_y_expand):
+def plot_test(final_preds_expand, test_y_expand, str_legend):
+    """
     fig, ax = plt.subplots(figsize=(17,8))
     ax.set_title("Test Predictions vs. Actual For Last Year")
     ax.plot(final_preds_expand, color = 'red', label = 'predicted')
@@ -29,6 +30,34 @@ def plot_test(final_preds_expand, test_y_expand):
     plt.legend(loc="upper left")
     plt.show()
     plt.savefig('plt_test.png')
+    """
+    text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    fig_verify = plt.figure()
+    plt.plot(final_preds_expand, color="blue")
+    plt.plot(test_y_expand, color="orange")
+    plt.title('LSTM2 Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date)
+    plt.ylabel('value')
+    plt.xlabel('row')
+    #str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(test_y_expand, final_preds_expand)) + '\nMSE = ' + str(mse.item())
+    #str_data = 'Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date
+    first_legend = plt.legend(['predicted', 'actual data'] , loc='upper left')
+    dates_legend = plt.legend([str_legend], loc='upper right')
+
+    #mesures_legend = plt.legend([str_legend], loc='upper right')
+
+    ax = plt.gca().add_artist(first_legend)
+
+    #ay = plt.gca().add_artist(mesures_legend)
+
+
+    #plt.legend([AnyObject()], [str_legend],
+     #          handler_map={AnyObject: AnyObjectHandler()})
+
+    #plt.show()
+    path_model_regression_verify = "./LSTM2_lille" + text + ".png"
+
+    fig_verify.savefig(path_model_regression_verify)
 
 
 class AnyObject(object):
@@ -67,13 +96,6 @@ def reverse_transformer(val, column_const):
 def reverse_y(val, col_PM10):
     return (val - col_PM10['min']) / (col_PM10['max'] - col_PM10['min'])
 
-
-def r2_keras(y_true, y_pred):
-    """Coefficient of Determination
-    """
-    SS_res =  K.sum(K.square( y_true - y_pred ))
-    SS_tot = K.sum(K.square( y_true - K.mean(y_true) ) )
-    return ( 1 - SS_res/(SS_tot + K.epsilon()))
 
 
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
@@ -222,7 +244,7 @@ def test_station(data, station, cut):
 
    # display_plot(df_temp)
 
-    train_data, test_data = prepare_data(df_temp, True, False)
+    train_data, test_data = prepare_data(df_temp, False, False)
 
 
     print(test_data.head())
@@ -563,13 +585,14 @@ def test_station(data, station, cut):
 
     rmse = np.sqrt(mse)
     print(rmse)
+    str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(y_inv, yhat_inv)) + '\nMSE = ' + str(mse.item())
 
-    # plot_test(unscaled_yhat.iloc[:24*31*2,], unscaled_y.iloc[:24*31*2,])
+    plot_test(y_inv, yhat_inv, str_legend )
     print("######")
     print(unscaled_y.values)
     print("######")
 
-    plot_test(unscaled_yhat.values, unscaled_y.values)
+    #plot_test(unscaled_yhat.values, unscaled_y.values)
 
     print('Root Mean Squared Error: {:.4f}'.format(rmse))
 
