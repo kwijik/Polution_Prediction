@@ -84,7 +84,7 @@ arr_row_data = [salouel_raw_data, creil_raw_data, roth_raw_data]
 Deleting dates column and making it all floats
 """
 
-def prepare_data(df):
+def preprocessing_data(df):
     df = df.iloc[1:]
     df.columns = cols
     df = df.drop(["Date", 'NO2', 'O3'], axis=1)
@@ -96,9 +96,9 @@ TODO:
 def prepare_data_ar(array_of_df)
 """
 
-salouel_data = prepare_data(salouel_raw_data)
-creil_data = prepare_data(creil_raw_data)
-roth_data = prepare_data(roth_raw_data)
+salouel_data = preprocessing_data(salouel_raw_data)
+creil_data = preprocessing_data(creil_raw_data)
+roth_data = preprocessing_data(roth_raw_data)
 
 """
 DELETE ROWS WITH MISSING VALUES
@@ -155,7 +155,7 @@ def get_season(dt):
         return "H"
 
 
-separation_date = '31/12/2009'
+separation_date = '31/12/2010'
 begin_test = '01/01/2015'
 test_date = '31/12/2014'
 begin_date = '01/01/2005'
@@ -199,8 +199,11 @@ def prepare_data(df_temp, keep_season=False, keep_wind=False):
     train_data = pd.get_dummies(train_data)
     test_data = pd.get_dummies(test_data)
 
+    train_data.to_csv('./data/train.csv')
 
+    test_data.to_csv('./data/test.csv')
 
+    print("Dataframes saved...")
     return train_data, test_data
 
 
@@ -244,9 +247,9 @@ def test_station(data, station, cut):
 
     # Pollution plots go here
 
-    display_play(df_temp)
+    display_plot(df_temp)
 
-    train_data, test_data = prepare_data(df_temp, True, True)
+    train_data, test_data = prepare_data(df_temp, True, False)
 
 
     print(test_data.head())
@@ -275,7 +278,7 @@ def test_station(data, station, cut):
 
     nb_features_merged = train_seq_merged_df.shape[2]
 
-    """
+    # modéle 1
     model = Sequential()
     model.add(LSTM(
              input_shape=(n_past, nb_features),
@@ -289,12 +292,14 @@ def test_station(data, station, cut):
     model.add(Dense(units=1))
     model.add(Activation("linear"))
     model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae', r2_keras])
+
     """
+    # Modéle 2 
     model = Sequential()  # <- this model works better
     model.add(LSTM(50, input_shape=(n_past, nb_features)))
     model.add(Dense(1))
     model.compile(loss='mae', optimizer='adam')
-
+    """
     print(model.summary())
 
 
@@ -341,7 +346,6 @@ def test_station(data, station, cut):
     print(train_merged_label_array.shape)
     #print(np.array(X_test.shape))
     #print(Y_test.shape)
-
 
 
     #scores_test = estimator.evaluate(X_test, Y_test, verbose=2) # Here is a problem
@@ -410,11 +414,12 @@ dict = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_d
 for key in dict.keys():
     test_station(dict[key], key, False)
     test_station(dict[key], key, True)
-
 """
+
 for st in arr_row_data: # the best result is 2 -> saluel True
     test_station(st, False)
     test_station(st, True)
-"""
+
 #dt = pd.read_csv("concatenated_data.csv", sep=',', decimal=',')
-#test_station(dt, "Concatenation", True)
+test_station(creil_raw_data, "creil", True)
+"""
