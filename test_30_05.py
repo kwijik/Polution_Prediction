@@ -19,6 +19,7 @@ from sklearn.metrics import r2_score
 from Column_settings import *
 from W_settings import *
 from pollution_plots import *
+from keras.layers import GRU
 
 import matplotlib.patches as mpatches
 
@@ -129,10 +130,6 @@ test_date = '31/12/2014'
 NORMALISATION
 """
 
-for col in salouel_data.columns:
-    salouel_data[col] = salouel_data[col].apply(scale_transformer, args=(settings_array[col],))
-
-
 
 #salouel_data["PM10"] = salouel_data["PM10"].apply(reverse_transformer, args=(settings_array["PM10"],))
 
@@ -182,7 +179,7 @@ def prepare_data(df_temp, keep_season=False, keep_wind=False):
     test_data = test_data.drop("vent", axis=1)
 
 
-    for col in salouel_data.columns:
+    for col in train_data.columns:
         train_data[col] = train_data[col].apply(scale_transformer, args=(settings_array[col],))
 
     for col in test_data.columns:
@@ -285,21 +282,30 @@ def test_station(data, station, cut):
              units=100,
              return_sequences=True))
     model.add(Dropout(0.2))
-    model.add(LSTM(
+    model.add(GRU(
               units=50,
               return_sequences=False))
     model.add(Dropout(0.2))
     model.add(Dense(units=1))
-    model.add(Activation("linear"))
-    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mae', r2_keras])
+    model.add(Activation("tanh"))
+    model.compile(loss='mae', optimizer='adam')
 
     """
-    # Modéle 2 
+    # Modéle 2
     model = Sequential()  # <- this model works better
     model.add(LSTM(50, input_shape=(n_past, nb_features)))
     model.add(Dense(1))
     model.compile(loss='mae', optimizer='adam')
-    """
+    
+    model = Sequential()
+    model.add(GRU(units=50, activation=None, input_shape=(n_past, nb_features), return_sequences=False))
+    model.add(Activation('tanh'))
+    model.add(Dropout(0.2))
+    model.add(Dense(1))
+    model.add(Activation('relu'))
+    # model.load_weights('weights/bitcoin2015to2017_close_GRU_1_tanh_relu_-32-0.00004.hdf5')
+    model.compile(loss='mse', optimizer='adam')
+"""
     print(model.summary())
 
 
