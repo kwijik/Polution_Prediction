@@ -303,7 +303,6 @@ def test_station(data, station, cut):
     model.add(Dropout(0.2))
     model.add(Dense(1))
     model.add(Activation('relu'))
-    # model.load_weights('weights/bitcoin2015to2017_close_GRU_1_tanh_relu_-32-0.00004.hdf5')
     model.compile(loss='mse', optimizer='adam')
 """
     print(model.summary())
@@ -318,7 +317,7 @@ def test_station(data, station, cut):
     test_merged_y_scaled_data = test_y_merged_scaled_data[n_past + n_future - 1:len(test_y_merged_scaled_data)] # Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ñ‚ÑŒ Ñ€Ð°Ð·Ð¼ÐµÑ€ (+-1)!
 
 
-    EPOCHS = 100
+    EPOCHS = 200
     BATCH_SIZE = 200
 
     print("shape of testX :")
@@ -333,10 +332,7 @@ def test_station(data, station, cut):
     print("shape of trainY :")
     print(train_merged_label_array.shape)
 
-    history = model.fit(train_seq_merged_df, train_merged_label_array, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(test_seq_merged_df, test_merged_y_scaled_data), verbose=2,
-              callbacks = [#keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='min'),
-                           keras.callbacks.ModelCheckpoint(model_path_merged, monitor='val_loss', save_best_only=True, mode='min', verbose=0)]
-              )
+    history = model.fit(train_seq_merged_df, train_merged_label_array, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(test_seq_merged_df, test_merged_y_scaled_data), verbose=2)
 
     estimator = load_model(model_path_merged, custom_objects={'r2_keras': r2_keras})
 
