@@ -112,27 +112,12 @@ roth_data = roth_data.dropna(axis=0, how="any")
 
 merged_data = pd.concat([salouel_data, creil_data, roth_data])
 
-# Sorting by date, returns TrainModel, TestModel and Control dataframes
 
-
-#REPLACE MISSING VALUES BY AVERAGE OF CORRESPONDING VALUES
-
-
-"""
-Cut data until test_date
-
-Returen Y and X
-
-"""
 test_date = '31/12/2014'
 
 """
 NORMALISATION
 """
-
-
-#salouel_data["PM10"] = salouel_data["PM10"].apply(reverse_transformer, args=(settings_array["PM10"],))
-
 
 
 def get_season(dt):
@@ -162,7 +147,7 @@ final_date = '31/12/2015'
 
 
 def prepare_data(df_temp, keep_season=False, keep_wind=False):
-
+	# separate dataframe into test and train
     train_data = df_temp[df_temp['Date'] < test_date].drop(["Date"], axis=1).dropna(axis=0, how="any")
     test_data = df_temp[df_temp['Date'] > test_date].drop(["Date"], axis=1).dropna(axis=0, how="any")
 
@@ -206,6 +191,7 @@ def prepare_data(df_temp, keep_season=False, keep_wind=False):
 
 
 def clean_data(array_raw_data, cut):
+	#returns cleaned dataframe
     global begin_date
     # concat is first
     conc = True
@@ -231,6 +217,7 @@ n_past = 90
 n_future = 0
 
 def gen_sequence(df):
+	# genearation of sequences
     X_seq = []
     for i in range(n_past, len(df) - n_future + 1):
         X_seq.append(df.iloc[i - n_past : i, :].values)
@@ -239,7 +226,6 @@ def gen_sequence(df):
 
 def test_station(data, station, cut):
     text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     df_temp = clean_data(data, cut)
 
     # Pollution plots go here
@@ -249,7 +235,7 @@ def test_station(data, station, cut):
     train_data, test_data = prepare_data(df_temp, True, False)
 
 
-    print(test_data.head())
+    #print(test_data.head())
 
     train_y_merged_scaled_data = train_data['PM10']
     train_x_merged_scaled_data = train_data.drop("PM10", axis=1)
@@ -340,25 +326,10 @@ def test_station(data, station, cut):
 
     dt = pd.read_csv("concatenated_data.csv", sep=',', decimal=',')
 
-    #X_test,Y_test = gen_test_data1(arr_row_data[index])
-    #X_test, Y_test = gen_test_data1(dt)
-
 
     print(train_seq_merged_df.shape)
     print(train_merged_label_array.shape)
-    #print(np.array(X_test.shape))
-    #print(Y_test.shape)
 
-
-    #scores_test = estimator.evaluate(X_test, Y_test, verbose=2) # Here is a problem
-
-
-    #print('\nR^2: {}'.format(scores_test[2]))
-    #print('\nMAE: {}'.format(scores_test[1]))
-    #print('\nR^2: {}'.format(scores_test[2]))
-
-    #final_preds = estimator.predict(X_test)
-    #print(type(final_preds))
 
     final_preds = estimator.predict(test_seq_merged_df)
     print(type(final_preds))
@@ -368,8 +339,6 @@ def test_station(data, station, cut):
     Y_reversed = pd.DataFrame(test_merged_y_scaled_data).apply(reverse_transformer, args=(settings_array["PM10"],)) # check reversed and actual data if they are reversed or not
 
     mse = np.mean((predicted_reversed - Y_reversed) ** 2)
-
-    #rmse = sqrt(mean_squared_error(Y_reversed, predicted_reversed))
 
     print('Test MSE: ' + str(mse))
     print('Variance score: {:2f}'.format(r2_score(Y_reversed, predicted_reversed)))
@@ -385,15 +354,9 @@ def test_station(data, station, cut):
     first_legend = plt.legend(['predicted', 'actual data'] , loc='upper left')
     dates_legend = plt.legend([str_legend], loc='upper right')
 
-    #mesures_legend = plt.legend([str_legend], loc='upper right')
 
     ax = plt.gca().add_artist(first_legend)
 
-    #ay = plt.gca().add_artist(mesures_legend)
-
-
-    #plt.legend([AnyObject()], [str_legend],
-     #          handler_map={AnyObject: AnyObjectHandler()})
 
     #plt.show()
     path_model_regression_verify = "./LSTM2_lille" + text + ".png"
@@ -404,24 +367,9 @@ def test_station(data, station, cut):
     os.remove(model_path_merged)
 
 
-
-#test_station(salouel_raw_data, "Sal", True) #  37.523128 0.255424 <- 1er modele ! 2eme modele: R2 0.307077 ! MSE :  33.647119
-
 dict = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
-
-#Test plot pollution#
-#test_station(creil_raw_data, "Creil", True)
 
 
 for key in dict.keys():
     test_station(dict[key], key, False)
     test_station(dict[key], key, True)
-"""
-
-for st in arr_row_data: # the best result is 2 -> saluel True
-    test_station(st, False)
-    test_station(st, True)
-
-#dt = pd.read_csv("concatenated_data.csv", sep=',', decimal=',')
-test_station(creil_raw_data, "creil", True)
-"""
