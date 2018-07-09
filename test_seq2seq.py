@@ -20,6 +20,7 @@ from W_settings import *
 from pollution_plots import *
 
 import matplotlib.patches as mpatches
+import os
 
 def plot_test(final_preds_expand, test_y_expand, str_legend):
     """
@@ -250,8 +251,21 @@ def test_station(data, station, cut):
     print(test_data.head())
 
 
-    X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']].values.copy()
-    X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']].values.copy()
+    #X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']].values.copy()
+    #X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']].values.copy()
+
+    #X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'vent_E', 'vent_SO','vent_N', 'vent_NE', 'vent_NO', 'vent_O', 'vent_S', 'vent_SE']].values.copy()
+    #X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'vent_E', 'vent_SO','vent_N', 'vent_NE', 'vent_NO', 'vent_O', 'vent_S', 'vent_SE']].values.copy()
+
+    #X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
+    #X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
+
+
+    X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'Season_A', 'Season_E', 'Season_H', 'Season_P']].values.copy()
+    X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'Season_A', 'Season_E', 'Season_H', 'Season_P']].values.copy()
+
+	
+	
     y_train = train_data['PM10'].values.copy().reshape(-1, 1)
     y_test = test_data['PM10'].values.copy().reshape(-1, 1)
 
@@ -310,7 +324,6 @@ def test_station(data, station, cut):
     from tensorflow.python.framework import dtypes
     import tensorflow as tf
     import copy
-    import os
 
     ## Parameters
     learning_rate = 0.01
