@@ -225,8 +225,8 @@ def clean_data(array_raw_data, cut):
 
 
 
-n_past = 90
-n_future = 0
+n_past = 120
+n_future = 10
 
 def gen_sequence(df):
     X_seq = []
@@ -326,7 +326,7 @@ def test_station(data, station, cut):
     import copy
 
     ## Parameters
-    learning_rate = 0.01
+    learning_rate = 0.02 #0.01
     lambda_l2_reg = 0.003
 
     ## Network Parameters
