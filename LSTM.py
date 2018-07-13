@@ -64,6 +64,14 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
         agg.dropna(inplace=True)
     return agg
 
+def write_results(text):
+    # file = open("results.txt", "w")
+
+    now = datetime.datetime.now()
+
+    with open("batch.txt", "a") as file:
+        text = now.strftime("%Y-%m-%d %H:%M:%S") + ": " + "\n" + text + "\n" + "\n"
+        file.write(text)
 
 
 creil_raw_data = pd.read_csv("Moyennes_J_creil_2005_2015.csv", header=None, sep=';', decimal=',')
@@ -71,7 +79,10 @@ roth_raw_data = pd.read_csv("Moyennes_J_roth_2005_2015.csv", header=None, sep=';
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
 
 #print(data)
-def test_data(dataset, station_name):
+def test_data(dataset, station_name, BS):
+    params = "Test for " + station_name + "; Batch_size is: " + str(BS)
+    print(params)
+
     dataset = preprocessing_data(dataset)
     values = dataset.values
 
@@ -84,13 +95,13 @@ def test_data(dataset, station_name):
 
     reframed.drop(reframed.columns[[-9, -8, -7,-6,-5,-4,-3,-2,-1]], axis=1, inplace=True)
 
-    print("####")
-    print(reframed.head())
-    print("####")
+    #print("####")
+    #print(reframed.head())
+    #print("####")
 
     values = reframed.values
-    print("values:")
-    print(values.shape)
+    #print("values:")
+    #print(values.shape)
 
     ########
     # LSTM #
@@ -101,30 +112,30 @@ def test_data(dataset, station_name):
     scaled_label = scaler.fit_transform(values[:,-1].reshape(-1,1))
     values = np.column_stack((scaled_features, scaled_label))
 
-    print("values:")
-    print(values.shape)
+    #print("values:")
+    #print(values.shape)
 
     n_train_hours = 365
     train = values[:n_train_hours, :]
     test = values[n_train_hours:, :]
-    print("test:")
-    print(test.shape)
+    #print("test:")
+    #print(test.shape)
     # split into input and outputs
     # features take all values except the var1
     train_X, train_y = train[:, :-1], train[:, -1]
     test_X, test_y = test[:, :-1], test[:, -1]
 
-    print("train_X:")
-    print(test_X)
+    #print("train_X:")
+    #print(test_X)
 
     # reshape input to be 3D [samples, timesteps, features]
     train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
     test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
-    print("train_X:")
-    print(test_X.shape)
+    #print("train_X:")
+    #print(test_X.shape)
     #print(test_X.info())
 
-    print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
+    #print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
     # design network
     model = Sequential()
     model.add(LSTM(128, input_shape=(train_X.shape[1], train_X.shape[2])))
@@ -133,13 +144,13 @@ def test_data(dataset, station_name):
     model.compile(loss='mae', optimizer='adam')
 
 
-    print(reframed.head())
+    #print(reframed.head())
 
     start = time.time()
 
     # fit network
     ###################### Can change Epochs, Batch size here #######################
-    history = model.fit(train_X, train_y, epochs=25, batch_size=72, validation_data=(test_X, test_y),
+    history = model.fit(train_X, train_y, epochs=25, batch_size=BS, validation_data=(test_X, test_y),
                         verbose=1, shuffle=False)
     # plot history
 
@@ -152,8 +163,8 @@ def test_data(dataset, station_name):
 
     # make a prediction
     yhat = model.predict(test_X)
-    print("yhat:")
-    print(yhat)
+    #print("yhat:")
+    #print(yhat)
     test_X = test_X.reshape((test_X.shape[0], test_X.shape[2]))
     # invert scaling for forecast
     inv_yhat = concatenate((yhat, test_X[:, 1:]), axis=1)
@@ -165,7 +176,7 @@ def test_data(dataset, station_name):
     inv_y = scaler.inverse_transform(inv_y)
     inv_y = inv_y[:, 0]
     end = time.time()
-    print('This took {} seconds.'.format(end - start))
+    #print('This took {} seconds.'.format(end - start))
     # calculate RMSE
     mse = mean_squared_error(inv_y, inv_yhat)
     rmse = sqrt(mse)
@@ -202,8 +213,6 @@ def test_data(dataset, station_name):
         fig_verify.savefig('./SVR/' +station_name + "_" + text)
 
 
-
-
     str_legend = 'R2: ' + str(r2_score(inv_y, inv_yhat)) + "\nRMSE: " + str(rmse) + "\nMSE: " + str(mse)
 
     plot_preds_actual(inv_yhat[:300,], inv_y[:300,], station_name, str_legend)
@@ -214,9 +223,17 @@ def test_data(dataset, station_name):
     #print('Variance score: %.2f' % r2_score(y, data_pred))
     print('Variance score: {:2f}'.format(r2_score(inv_y, inv_yhat)))
 
+    write_results(params + "; RMSE " + str(rmse)  + "; R2 " + str(r2_score(inv_y, inv_yhat)))
 
 
 datasets =  {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
+BSs = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+for bs in BSs:
+    test_data(salouel_raw_data, "salouel", bs)
+
+"""
 for key in datasets.keys():
     test_data(datasets[key], key)
+"""
