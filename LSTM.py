@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import time
 from W_settings import *
+from matplotlib import pyplot as plt
 
 import datetime
 import os
@@ -23,6 +24,8 @@ folder = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 cols = ['Date', 'NO2', 'O3', 'PM10', 'RR', 'TN', 'TX', 'TM',
                      'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']
+
+rmse_batch = []
 
 def preprocessing_data(df):
     df = df.iloc[1:]
@@ -80,6 +83,7 @@ salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, 
 
 #print(data)
 def test_data(dataset, station_name, BS):
+    global rmse_batch
     params = "Test for " + station_name + "; Batch_size is: " + str(BS)
     print(params)
 
@@ -157,7 +161,7 @@ def test_data(dataset, station_name, BS):
     pyplot.plot(history.history['loss'], label='train')
     pyplot.plot(history.history['val_loss'], label='test')
     pyplot.legend()
-    pyplot.show()
+    #pyplot.show()
 
 
 
@@ -183,7 +187,6 @@ def test_data(dataset, station_name, BS):
     print('Test RMSE: %.3f' % rmse)
 
 
-    from matplotlib import pyplot as plt
 
 
     def plot_predicted(predicted_data, true_data):
@@ -193,7 +196,7 @@ def test_data(dataset, station_name, BS):
 
         ax.plot(predicted_data, label='Prediction', color='red', linewidth='2')
         plt.legend()
-        plt.show()
+        #plt.show()
 
 
     def plot_preds_actual(preds, actual, station_name, str_legend):
@@ -224,14 +227,29 @@ def test_data(dataset, station_name, BS):
     print('Variance score: {:2f}'.format(r2_score(inv_y, inv_yhat)))
 
     write_results(params + "; RMSE " + str(rmse)  + "; R2 " + str(r2_score(inv_y, inv_yhat)))
-
+    rmse_batch.append(rmse)
 
 datasets =  {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
 BSs = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+RMSEs = [9.86, 8.84, 8.94, 8.86, 9.09, 9.21, 9.67, 9.45, 9.81, 9.87]
+
+
+
 
 for bs in BSs:
     test_data(salouel_raw_data, "salouel", bs)
+print(rmse_batch)
+
+
+fig, ax = plt.subplots(figsize=(8,5))
+ax.set_title('LSTM sea to scalar RMSE vs Batch Size salouel', fontsize=16)
+ax.set_ylabel('RMSE', fontsize=16)
+ax.set_xlabel('Batch size', fontsize=16)
+ax.plot(BSs, rmse_batch, marker='x')
+# plt.axvline(x=30, color='red', linestyle='dashed', linewidth=1)
+plt.show()
+fig.savefig('./SVR/batch_sal')
 
 """
 for key in datasets.keys():
