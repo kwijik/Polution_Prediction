@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 import datetime
-import os
+import os, sys
 import matplotlib.pyplot as plt
 
 from tensorflow.contrib import rnn
@@ -11,6 +11,7 @@ from tensorflow.python.framework import dtypes
 import tensorflow as tf
 import copy
 import matplotlib.patches as mpatches
+import time
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 np.random.seed(7)
@@ -20,9 +21,26 @@ from W_settings import *
 from pollution_plots import *
 
 import matplotlib.patches as mpatches
-import os
 
-def plot_test(final_preds_expand, test_y_expand, str_legend):
+folder = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+batch_sizes = []
+times_test = []
+times_train = []
+
+def plot_lstm_vs_time(batch_sizes, times_test, times_train):
+    fig, ax = plt.subplots(figsize=(8,5))
+    ax.set_title('LSTM Seq2Seq batch sizes vs. Runtime', fontsize=16)
+    ax.set_ylabel('Time in seconds', fontsize=16)
+    ax.set_xlabel('Batch size', fontsize=16)
+    ax.plot(batch_sizes, times_train, label='Train time', marker='x')
+    ax.plot(batch_sizes, times_test, label='Test time', marker='x')
+    ax.legend()
+    plt.show()
+    fig.savefig('./SVR/temp_saluel')
+
+
+def plot_test(final_preds_expand, test_y_expand, str_legend, folder):
     """
     fig, ax = plt.subplots(figsize=(17,8))
     ax.set_title("Test Predictions vs. Actual For Last Year")
@@ -37,7 +55,7 @@ def plot_test(final_preds_expand, test_y_expand, str_legend):
     fig_verify = plt.figure()
     plt.plot(final_preds_expand, color="blue")
     plt.plot(test_y_expand, color="orange")
-    plt.title('LSTM2 Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date)
+    plt.title('Seq2Sea Train :' + begin_date + ' - ' + test_date  + '\nTest :' + begin_test + ' - ' + final_date)
     plt.ylabel('value')
     plt.xlabel('row')
     #str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(test_y_expand, final_preds_expand)) + '\nMSE = ' + str(mse.item())
@@ -56,7 +74,7 @@ def plot_test(final_preds_expand, test_y_expand, str_legend):
      #          handler_map={AnyObject: AnyObjectHandler()})
 
     #plt.show()
-    path_model_regression_verify = "./LSTM2_lille" + text + ".png"
+    path_model_regression_verify = "./Seq2seq_juillet/"+ folder + "/Seq2seq_lilleSeq2seq_lille" + text + ".png"
 
     fig_verify.savefig(path_model_regression_verify)
 
@@ -193,7 +211,7 @@ def prepare_data(df_temp, keep_season=False, keep_wind=False):
 
     train_data = pd.get_dummies(train_data)
     test_data = pd.get_dummies(test_data)
-
+    #print(test_data.info())
     train_data.to_csv('./data/train.csv')
 
     test_data.to_csv('./data/test.csv')
@@ -225,8 +243,8 @@ def clean_data(array_raw_data, cut):
 
 
 
-n_past = 120
-n_future = 10
+n_past = 90
+n_future = 0
 
 def gen_sequence(df):
     X_seq = []
@@ -235,20 +253,22 @@ def gen_sequence(df):
     return X_seq
 
 
-def test_station(data, station, cut):
+def test_station(data, station, cut, BS):
+    global folder, os
     print("Entered in Function " + station)
-    text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    #text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if not (os.path.isdir(folder)):
+        os.mkdir(folder)
     df_temp = clean_data(data, cut)
 
     # Pollution plots go here
 
    # display_plot(df_temp)
 
-    train_data, test_data = prepare_data(df_temp, False, False)
+    train_data, test_data = prepare_data(df_temp, True, True)
 
 
-    print(test_data.head())
+    #print(test_data.head())
 
 
     #X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']].values.copy()
@@ -264,15 +284,18 @@ def test_station(data, station, cut):
     X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'Season_A', 'Season_E', 'Season_H', 'Season_P']].values.copy()
     X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'Season_A', 'Season_E', 'Season_H', 'Season_P']].values.copy()
 
-	
-	
     y_train = train_data['PM10'].values.copy().reshape(-1, 1)
+    print("shape:")
+    print(y_train.shape[1])
     y_test = test_data['PM10'].values.copy().reshape(-1, 1)
 
-    print(X_train.shape)  # 318
-    print(y_train.shape)  # 318
+    #print(X_train.shape)  #    (3436, 10)
 
-    for i in range(X_train.shape[1] - 4):
+    #print(y_train.shape)  #    (3436, 1)
+
+    #print(X_train.shape[1])
+
+    for i in range(X_train.shape[1]):
         temp_mean = X_train[:, i].mean()
         temp_std = X_train[:, i].std()
         X_train[:, i] = (X_train[:, i] - temp_mean) / temp_std
@@ -285,9 +308,9 @@ def test_station(data, station, cut):
     y_test = (y_test - y_mean) / y_std
 
     input_seq_len = 30
-    output_seq_len = 5
+    output_seq_len = 1
 
-    def generate_train_samples(x=X_train, y=y_train, batch_size=10, input_seq_len=input_seq_len,
+    def generate_train_samples(x=X_train, y=y_train, batch_size=BS, input_seq_len=input_seq_len,
                                output_seq_len=output_seq_len):
         total_start_points = len(x) - input_seq_len - output_seq_len
         start_x_idx = np.random.choice(range(total_start_points), batch_size, replace=False)
@@ -314,19 +337,20 @@ def test_station(data, station, cut):
         return input_seq, output_seq
 
     x, y = generate_train_samples()
-    print(x.shape, y.shape)
+    #print(x.shape, y.shape)
 
     test_x, test_y = generate_test_samples()
-    print(test_x.shape, test_y.shape)
+    #print(test_x.shape, test_y.shape)
 
     from tensorflow.contrib import rnn
     from tensorflow.python.ops import variable_scope
     from tensorflow.python.framework import dtypes
     import tensorflow as tf
     import copy
+    import os
 
     ## Parameters
-    learning_rate = 0.02 #0.01
+    learning_rate = 0.02
     lambda_l2_reg = 0.003
 
     ## Network Parameters
@@ -521,8 +545,8 @@ def test_station(data, station, cut):
             reshaped_outputs=reshaped_outputs,
         )
 
-    total_iteractions = 100
-    batch_size = 16
+    total_iteractions = 180
+    batch_size = BS
     KEEP_RATE = 0.5
     train_losses = []
     val_losses = []
@@ -533,7 +557,7 @@ def test_station(data, station, cut):
     rnn_model = build_graph(feed_previous=False)
 
     saver = tf.train.Saver()
-
+    start_train = time.time()
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
@@ -548,29 +572,52 @@ def test_station(data, station, cut):
 
 
         temp_saver = rnn_model['saver']()
-        save_path = temp_saver.save(sess, os.path.join('./', 'mv_ts_pollution_case'))
+        sous_chemin = './Seq2seq_juillet/' + folder + "/"
+
+        save_path = temp_saver.save(sess, os.path.join(sous_chemin, 'mv_ts_pollution_case'))
 
     print("Checkpoint saved at: ", save_path)
 
+    end_train = time.time()
+
+    print('Time taken to train is {} minutes'.format((end_train - start_train) / 60))
+    print('Time in seconds is: {}'.format(end_train - start_train))
+
+    train_time = end_train - start_train
+
     rnn_model = build_graph(feed_previous=True)
+
+    start_test = time.time()
 
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
-
-        saver = rnn_model['saver']().restore(sess, os.path.join('./', 'mv_ts_pollution_case'))
+        sous_chemin = './Seq2seq_juillet/' + folder + "/"
+        saver = rnn_model['saver']().restore(sess, os.path.join(sous_chemin, 'mv_ts_pollution_case'))
 
         feed_dict = {rnn_model['enc_inp'][t]: test_x[:, t, :] for t in range(input_seq_len)}  # batch prediction
         feed_dict.update({rnn_model['target_seq'][t]: np.zeros([test_x.shape[0], output_dim], dtype=np.float32) for t in
                           range(output_seq_len)})
         final_preds = sess.run(rnn_model['reshaped_outputs'], feed_dict)
-
+        print("final pred:")
+        print(len(final_preds))
         final_preds = [np.expand_dims(pred, 1) for pred in final_preds]
         final_preds = np.concatenate(final_preds, axis=1)
+
+        print("final pred transformated:")
+        print(final_preds.shape)
+
         print("Test mse is: ", np.mean((final_preds - test_y) ** 2))
 
     # Unscale the predictions
     # make into one array
+    end_test = time.time()
+
+    print('Time taken is: {} minutes.'.format((end_test - start_test) / 60))
+    print('Time in seconds is: {}'.format(end_test - start_test))
+
+    test_time = end_test - start_test
+
     dim1, dim2 = final_preds.shape[0], final_preds.shape[1]
 
     preds_flattened = final_preds.reshape(dim1 * dim2, 1)
@@ -588,9 +635,9 @@ def test_station(data, station, cut):
     pd.concat((unscaled_y, unscaled_yhat), axis=1)
 
     # Calculate RMSE and Plot
-    print("######")
-    print(yhat_inv)
-    print("######")
+#    print("######")
+#    print(yhat_inv)
+#    print("######")
 
 
     mse = np.mean((yhat_inv - y_inv) ** 2)
@@ -598,12 +645,12 @@ def test_station(data, station, cut):
 
     rmse = np.sqrt(mse)
     print(rmse)
-    str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(y_inv, yhat_inv)) + '\nMSE = ' + str(mse.item())
+    str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(y_inv, yhat_inv)) + '\nMSE = ' + str(mse.item()) + '\nRMSE' + str(rmse)
 
-    plot_test(y_inv, yhat_inv, str_legend )
-    print("######")
-    print(unscaled_y.values)
-    print("######")
+    plot_test(y_inv, yhat_inv, str_legend, folder)
+#    print("######")
+#    print(unscaled_y.values)
+#    print("######")
 
     #plot_test(unscaled_yhat.values, unscaled_y.values)
 
@@ -612,6 +659,8 @@ def test_station(data, station, cut):
     # Calculate R^2 (regression score function)
     test_R2 = r2_score(y_inv, yhat_inv)
     print('Variance score: {:2f}'.format(r2_score(y_inv, yhat_inv)))
+    times_test.append(test_time)
+    times_train.append(train_time)
     res = "RMSE: " + str(rmse) + "\nRMSE: " + "\nR2: " + str(test_R2)
     write_results(res)
 
@@ -622,7 +671,20 @@ def test_station(data, station, cut):
 #test_station(creil_raw_data, "creil", True)
 
 dict_data = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
+BSs = [15, 20, 25, 30, 34, 40, 45]
+for BS in BSs:
+    test_station(salouel_raw_data, "salouel", True, BS)
 
+print("test time")
+print(times_test)
+
+print("train time")
+print(times_train)
+
+plot_lstm_vs_time(BSs, times_test, times_train)
+
+"""
 for key in dict_data.keys():
     test_station(dict_data[key], key, False)
     test_station(dict_data[key], key, True)
+"""
