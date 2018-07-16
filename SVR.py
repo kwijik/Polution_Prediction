@@ -23,6 +23,8 @@ cols = ['Date', 'NO2', 'O3', 'PM10', 'RR', 'TN', 'TX', 'TM',
 
 folder = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+RMSE = []
+
 # convert series to supervised learning
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     n_vars = 1 if type(data) is list else data.shape[1]
@@ -64,15 +66,17 @@ roth_raw_data = pd.read_csv("Moyennes_J_roth_2005_2015.csv", header=None, sep=';
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
 
 #print(data)
-def test_data(dataset, station_name):
+def test_data(dataset, station_name, LAG=5):
 
     dataset = preprocessing_data(dataset)
     values = dataset.values
 
     encoder = LabelEncoder()
     values[:,9] = encoder.fit_transform(values[:,9])
+    print("values shape")
+    print(values.shape)
 
-    reframed = series_to_supervised(values)
+    reframed = series_to_supervised(values, n_in=5)
 
 
 
@@ -83,8 +87,11 @@ def test_data(dataset, station_name):
     print("####")
 
     values = reframed.values
+
     #values = scaled
     scaler = MinMaxScaler(feature_range=(0, 1), copy=True)
+    print("values shape")
+    print(values.shape)
     scaled_features = scaler.fit_transform(values[:,:-1])
     scaled_label = scaler.fit_transform(values[:,-1].reshape(-1,1))
     values = np.column_stack((scaled_features, scaled_label))
@@ -140,7 +147,32 @@ def test_data(dataset, station_name):
     str_legend = 'R2: ' + str(r2_score(y_inv, y_pred)) + "\nRMSE: " + str(rmse) + "\nMSE: " + str(mse)
     plot_preds_actual(y_pred[:24*31*1,], y_inv[:24*31*1,], station_name, str_legend)
 
+    RMSE.append(rmse)
+
 datasets =  {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
+LAGS = [1, 5, 10, 15, 20, 25]
+"""
+for LAG in LAGS:
+    test_data(salouel_raw_data, "salouel", LAG)
+
+print(RMSE)
+
+
+"""
 for key in datasets.keys():
     test_data(datasets[key], key)
+
+LSTM_rmse = [9.763280406492743, 10.708318892382756, 11.153834756838132, 12.306218908923043, 12.103302673593983, 14.671574557373864]
+
+def plot_lstm_vs_svr(LAGS, lstm_rmse, svr_rmse):
+    fig, ax = plt.subplots(figsize=(8,5))
+    ax.set_title('Comparison of LSTM Sequence to Scalar VS SVR Sequence to Scalar', fontsize=16)
+    ax.set_ylabel('Time in seconds', fontsize=16)
+    ax.set_xlabel('RMSE', fontsize=16)
+    ax.plot(LAGS, lstm_rmse, label='LSTM', marker='x')
+    ax.plot(LAGS, svr_rmse, label='SVR', marker='x')
+    ax.legend()
+    plt.show()
+    fig.savefig('./SVR/lstm_vs_svr_saluel')
+#plot_lstm_vs_svr(LAGS, LSTM_rmse, RMSE)

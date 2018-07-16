@@ -25,6 +25,8 @@ folder = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 cols = ['Date', 'NO2', 'O3', 'PM10', 'RR', 'TN', 'TX', 'TM',
                      'PMERM', 'FFM', 'DXY', 'UM', 'GLOT']
 
+RMSE = []
+
 rmse_batch = []
 
 def preprocessing_data(df):
@@ -82,9 +84,9 @@ roth_raw_data = pd.read_csv("Moyennes_J_roth_2005_2015.csv", header=None, sep=';
 salouel_raw_data = pd.read_csv("Moyennes_J_salouel_2005_2015.csv", header=None, sep=';', decimal=',')
 
 #print(data)
-def test_data(dataset, station_name, BS):
+def test_data(dataset, station_name, LAG=1):
     global rmse_batch
-    params = "Test for " + station_name + "; Batch_size is: " + str(BS)
+    params = "Test for " + station_name + "; Batch_size is: " + str(LAG)
     print(params)
 
     dataset = preprocessing_data(dataset)
@@ -93,7 +95,7 @@ def test_data(dataset, station_name, BS):
     encoder = LabelEncoder()
     values[:,9] = encoder.fit_transform(values[:,9])
 
-    reframed = series_to_supervised(values)
+    reframed = series_to_supervised(values, n_in=LAG)
 
 
 
@@ -154,7 +156,7 @@ def test_data(dataset, station_name, BS):
 
     # fit network
     ###################### Can change Epochs, Batch size here #######################
-    history = model.fit(train_X, train_y, epochs=25, batch_size=BS, validation_data=(test_X, test_y),
+    history = model.fit(train_X, train_y, epochs=25, batch_size=72, validation_data=(test_X, test_y),
                         verbose=1, shuffle=False)
     # plot history
 
@@ -228,14 +230,16 @@ def test_data(dataset, station_name, BS):
 
     write_results(params + "; RMSE " + str(rmse)  + "; R2 " + str(r2_score(inv_y, inv_yhat)))
     rmse_batch.append(rmse)
+    RMSE.append(rmse)
 
 datasets =  {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
+
+
+
+"""
 BSs = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 RMSEs = [9.86, 8.84, 8.94, 8.86, 9.09, 9.21, 9.67, 9.45, 9.81, 9.87]
-
-
-
 
 for bs in BSs:
     test_data(salouel_raw_data, "salouel", bs)
@@ -251,7 +255,17 @@ ax.plot(BSs, rmse_batch, marker='x')
 plt.show()
 fig.savefig('./SVR/batch_sal')
 
+
+
+LAGS = [1, 5, 10, 15, 20, 25]
+
+for LAG in LAGS:
+    test_data(salouel_raw_data, "salouel", LAG)
+
+print(RMSE)
+
+
+
 """
 for key in datasets.keys():
     test_data(datasets[key], key)
-"""

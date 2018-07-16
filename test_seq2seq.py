@@ -39,6 +39,17 @@ def plot_lstm_vs_time(batch_sizes, times_test, times_train):
     plt.show()
     fig.savefig('./SVR/temp_saluel')
 
+RMSES = []
+def plot_lstm_vs_rmse(hidden_dims, rmses):
+    fig, ax = plt.subplots(figsize=(8,5))
+    ax.set_title('LSTM Seq2Seq Hidden Dim vs. RMSE', fontsize=16)
+    ax.set_ylabel('RMSE', fontsize=16)
+    ax.set_xlabel('# of hidden dimensions', fontsize=16)
+    ax.plot(hidden_dims, rmses, marker='x')
+    plt.axvline(x=30, color='red', linestyle='dashed', linewidth=1)
+    plt.show()
+    fig.savefig('./SVR/dimension_saluel')
+
 
 def plot_test(final_preds_expand, test_y_expand, str_legend, folder):
     """
@@ -253,7 +264,7 @@ def gen_sequence(df):
     return X_seq
 
 
-def test_station(data, station, cut, BS):
+def test_station(data, station, cut, DS=20):
     global folder, os
     print("Entered in Function " + station)
     #text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -285,8 +296,8 @@ def test_station(data, station, cut, BS):
     X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'Season_A', 'Season_E', 'Season_H', 'Season_P']].values.copy()
 
     y_train = train_data['PM10'].values.copy().reshape(-1, 1)
-    print("shape:")
-    print(y_train.shape[1])
+    #print("shape:")
+    #print(y_train.shape[1])
     y_test = test_data['PM10'].values.copy().reshape(-1, 1)
 
     #print(X_train.shape)  #    (3436, 10)
@@ -310,7 +321,7 @@ def test_station(data, station, cut, BS):
     input_seq_len = 30
     output_seq_len = 1
 
-    def generate_train_samples(x=X_train, y=y_train, batch_size=BS, input_seq_len=input_seq_len,
+    def generate_train_samples(x=X_train, y=y_train, batch_size=16, input_seq_len=input_seq_len,
                                output_seq_len=output_seq_len):
         total_start_points = len(x) - input_seq_len - output_seq_len
         start_x_idx = np.random.choice(range(total_start_points), batch_size, replace=False)
@@ -359,7 +370,7 @@ def test_station(data, station, cut, BS):
     # length of output signals
     output_seq_len = output_seq_len
     # size of LSTM Cell
-    hidden_dim = 64
+    hidden_dim = DS
     # num of input signals
     input_dim = X_train.shape[1]
     # num of output signals
@@ -546,7 +557,7 @@ def test_station(data, station, cut, BS):
         )
 
     total_iteractions = 180
-    batch_size = BS
+    batch_size = 16
     KEEP_RATE = 0.5
     train_losses = []
     val_losses = []
@@ -599,13 +610,13 @@ def test_station(data, station, cut, BS):
         feed_dict.update({rnn_model['target_seq'][t]: np.zeros([test_x.shape[0], output_dim], dtype=np.float32) for t in
                           range(output_seq_len)})
         final_preds = sess.run(rnn_model['reshaped_outputs'], feed_dict)
-        print("final pred:")
-        print(len(final_preds))
+        #print("final pred:")
+        #print(len(final_preds))
         final_preds = [np.expand_dims(pred, 1) for pred in final_preds]
         final_preds = np.concatenate(final_preds, axis=1)
 
-        print("final pred transformated:")
-        print(final_preds.shape)
+        #print("final pred transformated:")
+        #print(final_preds.shape)
 
         print("Test mse is: ", np.mean((final_preds - test_y) ** 2))
 
@@ -659,8 +670,9 @@ def test_station(data, station, cut, BS):
     # Calculate R^2 (regression score function)
     test_R2 = r2_score(y_inv, yhat_inv)
     print('Variance score: {:2f}'.format(r2_score(y_inv, yhat_inv)))
-    times_test.append(test_time)
-    times_train.append(train_time)
+    #times_test.append(test_time)
+    #times_train.append(train_time)
+    RMSES.append(rmse)
     res = "RMSE: " + str(rmse) + "\nRMSE: " + "\nR2: " + str(test_R2)
     write_results(res)
 
@@ -671,20 +683,23 @@ def test_station(data, station, cut, BS):
 #test_station(creil_raw_data, "creil", True)
 
 dict_data = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
+
+"""
 BSs = [15, 20, 25, 30, 34, 40, 45]
-for BS in BSs:
-    test_station(salouel_raw_data, "salouel", True, BS)
+DIMENSIONS = [10, 20, 30, 40, 50, 60]
 
-print("test time")
-print(times_test)
+for DS in DIMENSIONS:
+    test_station(salouel_raw_data, "salouel", True, DS)
 
-print("train time")
-print(times_train)
+print("rmses")
+print(RMSES)
 
-plot_lstm_vs_time(BSs, times_test, times_train)
+
+#plot_lstm_vs_time(BSs, times_test, times_train)
+plot_lstm_vs_rmse(DIMENSIONS, RMSES)
 
 """
 for key in dict_data.keys():
     test_station(dict_data[key], key, False)
+    print("--------------------")
     test_station(dict_data[key], key, True)
-"""
