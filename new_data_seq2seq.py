@@ -175,11 +175,11 @@ def get_season(dt):
         return "H"
 
 
-separation_date = '31/12/2010'
+#separation_date = '31/12/2010'
 begin_test = '01/01/2015'
 test_date = '31/12/2013'
-begin_date = '01/01/2005'
-final_date = '31/12/2015'
+begin_date = '01/01/2010'
+#final_date = '31/12/2015'
 validation_date = '31/12/2014'
 
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
@@ -267,11 +267,7 @@ def clean_data(array_raw_data, cut):
     df_temp = df_temp.astype(float)
     df_temp['DXY'] = dxy
     df_temp["Date"] = pd.to_datetime(df["Date"])
-    if cut == True:
-        df_temp = df_temp[df_temp['Date'] > separation_date]
-        begin_date = '01/01/2010'
-    else:
-        begin_date = '01/01/2005'
+
     # df_temp["Date"] = pd.to_datetime(df["Date"])
     df_temp['Season'] = df_temp["Date"].apply(get_season)
     #df_temp['vent'] = df_temp['DXY'].apply(get_dir)
@@ -290,13 +286,13 @@ def gen_sequence(df, n_future):
     return X_seq
 
 
-def test_station(data, station, cut):
+def test_station(data, station):
     global folder, os
     print("Entered in Function " + station)
     #text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if not (os.path.isdir(folder)):
         os.mkdir(folder)
-    df_temp = clean_data(data, cut)
+    df_temp = clean_data(data)
 
     # Pollution plots go here
 
@@ -795,4 +791,4 @@ for key in dict_data.keys():
     print("--------------------")
 """
 
-test_station(roth_raw_data, 'roth', False)
+test_station(roth_raw_data, 'roth')
