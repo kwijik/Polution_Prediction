@@ -55,6 +55,7 @@ def plot_lstm_vs_time(batch_sizes, times_test, times_train):
 
 RMSE = []
 R2 = []
+Batches = []
 
 def plot_lstm_vs_rmse(hidden_dims, rmses):
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -131,7 +132,7 @@ def write_results(text):
 
     now = datetime.datetime.now()
 
-    with open("grid_creil.txt", "a") as file:
+    with open("grid_creil_lstm3.txt", "a") as file:
         text = now.strftime("%Y-%m-%d %H:%M:%S") + ": " + "\n" + text + "\n" + "\n"
         file.write(text)
 
@@ -315,7 +316,7 @@ def gen_sequence(df, n_future):
     return X_seq
 
 
-def test_station(data, station, BS=5, ep=25):
+def test_station(data, station, tl):
 
     df_temp = clean_data(data)
 
@@ -342,7 +343,7 @@ def test_station(data, station, BS=5, ep=25):
     #values[:, 6] = encoder.fit_transform(values[:, 6])
 
 
-    reframed = series_to_supervised(values, n_in=1)
+    reframed = series_to_supervised(values, n_in=tl)
 
     reframed.drop(reframed.columns[[-9, -8, -7, -6, -5, -4, -3, -2, -1]], axis=1, inplace=True)
     #reframed.drop(reframed.columns[[-7, -6, -5, -4, -3, -2, -1]], axis=1, inplace=True)
@@ -368,15 +369,19 @@ def test_station(data, station, BS=5, ep=25):
     # print("values:")
     # print(values.shape)
 
-    n_train_hours = 359 * 3
-    train = values[:n_train_hours, :]
-    test = values[n_train_hours+365:, :]
+    n_train_days = 359 * 3
+    test_days = n_train_days+365
+    train = values[:n_train_days, :]
+    test = values[test_days:, :]
+    validation = values[n_train_days:test_days, :]
+
     # print("test:")
     # print(test.shape)
     # split into input and outputs
     # features take all values except the var1
     train_X, train_y = train[:, :-1], train[:, -1]
     test_X, test_y = test[:, :-1], test[:, -1]
+    validation_X, validation_Y = validation[:, :-1], validation[:, -1]
 
 
     # print("train_X:")
@@ -385,13 +390,13 @@ def test_station(data, station, BS=5, ep=25):
     # reshape input to be 3D [samples, timesteps, features]
     train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
     test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
-    # print(test_X.info())
+    validation_X = validation_X.reshape((validation_X.shape[0], 1, validation_X.shape[1]))
 
     # print(train_X.shape, train_y.shape, test_X.shape, test_y.shape)
     # design network
     model = Sequential()
     model.add(LSTM(128, input_shape=(train_X.shape[1], train_X.shape[2])))
-    model.add(Dense(50, activation='tanh'))
+    model.add(Dense(50, activation="softmax"))
     model.add(Dense(1))
     model.compile(loss='mae', optimizer='adam')
 
@@ -401,7 +406,7 @@ def test_station(data, station, BS=5, ep=25):
 
     # fit network
     ###################### Can change Epochs, Batch size here #######################
-    history = model.fit(train_X, train_y, epochs=ep, batch_size=BS, validation_data=(test_X, test_y),
+    history = model.fit(train_X, train_y, epochs=99, batch_size=20, validation_data=(validation_X, validation_Y),
                         verbose=1, shuffle=False)
     # plot history
 
@@ -423,6 +428,7 @@ def test_station(data, station, BS=5, ep=25):
     test_y = test_y.reshape((len(test_y), 1))
     inv_y = concatenate((test_y, test_X[:, 1:]), axis=1)
     inv_y = scaler.inverse_transform(inv_y)
+
     inv_y = inv_y[:, 0]
     end = time.time()
     # print('This took {} seconds.'.format(end - start))
@@ -453,7 +459,7 @@ def test_station(data, station, BS=5, ep=25):
         dates_legend = plt.legend([str_legend], loc='upper right')
         ax = plt.gca().add_artist(first_legend)
         path_model_regression_verify = "./Seq2seq_juillet/" + folder + "/LSTM_lilleSeq2seq_lille" + text + ".png"
-        fig_verify.savefig('./Data/' + station_name + "_" + text)
+        fig_verify.savefig('./Data/_grid_' + station_name + "_" + text)
         #plt.show()
 
     str_legend = 'R2: ' + str(r2_score(inv_y, inv_yhat)) + "\nRMSE: " + str(rmse) + "\nMSE: " + str(mse) + "\nBatch=5, Lag=1"
@@ -472,27 +478,47 @@ def test_station(data, station, BS=5, ep=25):
     # print('Variance score: %.2f' % r2_score(y, data_pred))
     #print('Variance score: {:2f}'.format(r2_score(inv_y, inv_yhat)))
 
-    params = 'Batch: ' + str(BS) + ' #   Epochs: ' + str(ep) + ' #   R2: {:2f}'.format(r2_score(inv_y, inv_yhat)) + ' #   RMSE:' + str(rmse)
+    #params = 'Batch: ' + str(BS) + ' #   Epochs: ' + str(ep) + ' #   R2: {:2f}'.format(r2_score(inv_y, inv_yhat)) + ' #   RMSE:' + str(rmse)
+
+    params = 'TL: ' + str(tl) + ' #   R2: {:2f}'.format(r2_score(inv_y, inv_yhat)) + ' #   RMSE:' + str(rmse)
+
     print(params)
 
     write_results(params)
     #rmse_batch.append(rmse)
+    #TimeLag.append(tl)
     RMSE.append(rmse)
     R2.append(r2_score(inv_y, inv_yhat))
-
+    #Batches.append(BS)
 datasets = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
 
 #BSs = [1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40]
 #BSs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-BSs = [1, 3, 5, 7, 9, 10, 15, 20, 25, 29, 30, 36, 39, 42, 47, 50, 59, 65, 69, 72, 75, 80, 86, 90, 92, 99, 100, 105, 109, 115]
+BSs = [1, 3, 5, 7, 10, 15, 20,  30, 40, 50]
 Epocs = [1, 2, 4, 6, 9, 10, 12, 15, 20, 24, 25, 29, 33, 37, 40, 45, 49, 50, 54, 59, 62, 66, 72, 75, 80, 85, 90, 99]
+funcs = ['softmax', 'elu', 'selu', 'softplus', 'softsign', 'relu', 'tanh', 'sigmoid', 'linear']
+TimeLag = [1,2,4,6,8,10,12,15,20]
 
-for bs in BSs:
-    for ep in Epocs:
-        test_station(creil_raw_data, "salouel", bs, ep)
+for tl in TimeLag:
+    test_station(creil_raw_data, "creil", tl)
 
+
+
+print(TimeLag)
+#print(Batches)
+print(R2)
+
+print(RMSE)
 """
+for bs in BSs:
+    test_station(creil_raw_data, "creil", bs)
+
+
+for f in funcs:
+    test_station(creil_raw_data, "salouel", 5, 25, f)
+    
+    
 for bs in BSs:
     test_station(creil_raw_data, "Creil", bs)
 

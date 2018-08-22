@@ -1,0 +1,2 @@
+model_checkpoint_path: "mv_ts_pollution_case"
+all_model_checkpoint_paths: "mv_ts_pollution_case"

@@ -49,7 +49,7 @@ def plot_lstm_vs_time(batch_sizes, times_test, times_train):
     ax.plot(batch_sizes, times_train, label='Train time', marker='x')
     ax.plot(batch_sizes, times_test, label='Test time', marker='x')
     ax.legend()
-    plt.show()
+    #plt.show()
     fig.savefig('./SVR/temp_saluel')
 
 
@@ -100,7 +100,7 @@ def plot_test(final_preds_expand, test_y_expand, str_legend, folder):
     #plt.legend([AnyObject()], [str_legend],
      #          handler_map={AnyObject: AnyObjectHandler()})
 
-    plt.show()
+    #plt.show()
     path_model_regression_verify = "./Seq2seq_juillet/"+ folder + "/Seq2seq_lilleSeq2seq_lille" + text + ".png"
 
     fig_verify.savefig(path_model_regression_verify)
@@ -354,15 +354,19 @@ def test_station(data, station, gamma, c):
     scaled_label = scaler.fit_transform(values[:,-1].reshape(-1,1))
     values = np.column_stack((scaled_features, scaled_label))
 
-    n_train_hours = 359 * 3
-    train = values[:n_train_hours, :]
-    test = values[n_train_hours+365:, :]
+    n_train_days = 359 * 3
+    test_days = n_train_days+365
+    train = values[:n_train_days, :]
+    test = values[test_days:, :]
+    validation = values[n_train_days:test_days, :]
+
     # print("test:")
     # print(test.shape)
     # split into input and outputs
     # features take all values except the var1
     train_X, train_y = train[:, :-1], train[:, -1]
     test_X, test_y = test[:, :-1], test[:, -1]
+    validation_X, validation_Y = validation[:, :-1], validation[:, -1]
 
 
     # print("train_X:")
@@ -371,6 +375,8 @@ def test_station(data, station, gamma, c):
     # reshape input to be 3D [samples, timesteps, features]
     train_X = train_X.reshape((train_X.shape[0], train_X.shape[1]))
     test_X = test_X.reshape((test_X.shape[0], test_X.shape[1]))
+    validation_X = validation_X.reshape((validation_X.shape[0], validation_X.shape[1]))
+
     # print("train_X:")
     # print(test_X.shape)
     # print(test_X.info())
@@ -384,16 +390,21 @@ def test_station(data, station, gamma, c):
     print(train_X.shape)
     x = train_X
     y = train_y
+    val_X = validation_X
 
-    regr = SVR(C = c, epsilon = 0.1, kernel = 'rbf', gamma = gamma,
+    regr = SVR(C = c, epsilon = 0.06, kernel = 'rbf', gamma = gamma,
                tol = 0.001, verbose=False, shrinking=True, max_iter = 10000)
 
     print('X;')
     print(x.shape)
     regr.fit(x, y)
-    data_pred = regr.predict(test_X)
+    #data_pred = regr.predict(test_X)
+    data_pred = regr.predict(validation_X)
+
     y_pred = scaler.inverse_transform(data_pred.reshape(-1,1))
-    y_inv = scaler.inverse_transform(test_y.reshape(-1,1))
+    #y_inv = scaler.inverse_transform(test_y.reshape(-1,1))
+    y_inv = scaler.inverse_transform(validation_Y.reshape(-1,1))
+
 
     mse = mean_squared_error(y_inv, y_pred)
     rmse = np.sqrt(mse)
@@ -417,7 +428,7 @@ def test_station(data, station, gamma, c):
         dates_legend = plt.legend([str_legend], loc='upper right')
         ax = plt.gca().add_artist(first_legend)
         path_model_regression_verify = "./Seq2seq_juillet/" + folder + "/Seq2seq_lilleSeq2seq_lille" + text + ".png"
-        plt.show()
+        #plt.show()
         fig_verify.savefig('./Data/svr__' +station_name )
 
     str_legend = 'R2: ' + str(r2_score(y_inv, y_pred)) + "\nRMSE: " + str(rmse) + "\nMSE: " + str(mse) + "\nGamma:1; C:5"
@@ -439,15 +450,26 @@ def test_station(data, station, gamma, c):
 datasets =  {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_raw_data}
 
 LAGS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-Cs = [1, 1.5, 2, 2.5, 3,4, 5, 10]
+Cs = [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 gamma = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
-test_station(salouel_raw_data, "Salouel", 1, 5)
+
+
+for g in gamma:
+    test_station(creil_raw_data, "creil", g, 0.9)
+
+
+print(RMSE)
+print(R2)
 
 """
+
 for g in gamma:
     for c in Cs:
-        test_station(roth, "roth", g, c)
+        test_station(creil_raw_data, "Creil", g, c)
+
+
+
 
 print(RMSE)
 print(R2)
@@ -472,3 +494,4 @@ def plot_lstm_vs_svr(LAGS, lstm_rmse, svr_rmse):
     fig.savefig('./SVR/lstm_vs_svr_saluel')
 #plot_lstm_vs_svr(LAGS, LSTM_rmse, RMSE)
 """
+#test_station(salouel_raw_data, "Salouel", 1, 5)

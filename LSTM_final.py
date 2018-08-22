@@ -275,9 +275,9 @@ def prepare_data(df_temp, keep_season=False, keep_wind=False):
     train_data = pd.get_dummies(train_data)
     test_data = pd.get_dummies(test_data)
     #print(test_data.info())
-    train_data.to_csv('./data/train.csv')
+    #train_data.to_csv('./data/train.csv')
 
-    test_data.to_csv('./data/test.csv')
+    #test_data.to_csv('./data/test.csv')
 
     #print("Dataframes saved...")
     return train_data, test_data, validation_data
@@ -315,38 +315,41 @@ def gen_sequence(df, n_future):
     return X_seq
 
 
-def test_station(data, station, BS=5, LAG=1):
+def test_station(data, station):
 
     df_temp = clean_data(data)
 
-    train_data, test_data, validation_data = prepare_data(df_temp, True, True)
+    train_data, test_data, valid_data = prepare_data(df_temp, True, True)
 
     X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
     X_test = test_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
-
+    valid_data = valid_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
 
 
 
     dataset = preprocessing_data(data)
     #dataset = dataset.drop(["TX", 'TN'], axis=1)
-    dataset = dataset.drop(["TM", 'TN', 'GLOT'], axis=1)
+    #dataset = dataset.drop(["TX", 'GLOT', 'TM'], axis=1)
+    dataset = dataset.drop([ 'TN'], axis=1)
 
     values = dataset.values
     #print(values[:, 7])
 
     values = DataFrame(values).dropna().values
-
+    #print(values)
     encoder = LabelEncoder()
     #values[:, 7] = encoder.fit_transform(values[:, 7])
+    values[:, 8] = encoder.fit_transform(values[:, 8])
     #values[:, 9] = encoder.fit_transform(values[:, 9])
-    values[:, 6] = encoder.fit_transform(values[:, 6])
+    #values[:, 6] = encoder.fit_transform(values[:, 6])
 
 
-    reframed = series_to_supervised(values, n_in=LAG)
+    reframed = series_to_supervised(values, n_in=1)
 
     #reframed.drop(reframed.columns[[-9, -8, -7, -6, -5, -4, -3, -2, -1]], axis=1, inplace=True)
     #reframed.drop(reframed.columns[[-7, -6, -5, -4, -3, -2, -1]], axis=1, inplace=True)
-    reframed.drop(reframed.columns[[-6, -5, -4, -3, -2, -1]], axis=1, inplace=True)
+    #reframed.drop(reframed.columns[[-6, -5, -4, -3, -2, -1]], axis=1, inplace=True)
+    reframed.drop(reframed.columns[[-8, -7,-6, -5, -4, -3, -2, -1]], axis=1, inplace=True)
 
     # print("####")
     # print(reframed.head())
@@ -368,13 +371,16 @@ def test_station(data, station, BS=5, LAG=1):
     # print("values:")
     # print(values.shape)
 
-    n_train_hours = 359 * 3
-    train = values[:n_train_hours, :]
-    test = values[n_train_hours+365:, :]
+    n_train_days = 359 * 3
+    test_days = n_train_days+365
+    train = values[:n_train_days, :]
+    test = values[test_days:, :]
+    validation = values[n_train_days:test_days, :]
     # print("test:")
     # print(test.shape)
     # split into input and outputs
     # features take all values except the var1
+    validation_X, validation_Y = validation[:, :-1], validation[:, -1]
     train_X, train_y = train[:, :-1], train[:, -1]
     test_X, test_y = test[:, :-1], test[:, -1]
 
@@ -383,6 +389,7 @@ def test_station(data, station, BS=5, LAG=1):
     # print(test_X)
 
     # reshape input to be 3D [samples, timesteps, features]
+    validation_X = validation_X.reshape((validation_X.shape[0], 1, validation_X.shape[1]))
     train_X = train_X.reshape((train_X.shape[0], 1, train_X.shape[1]))
     test_X = test_X.reshape((test_X.shape[0], 1, test_X.shape[1]))
     # print(test_X.info())
@@ -391,7 +398,7 @@ def test_station(data, station, BS=5, LAG=1):
     # design network
     model = Sequential()
     model.add(LSTM(128, input_shape=(train_X.shape[1], train_X.shape[2])))
-    model.add(Dense(50, activation='tanh'))
+    model.add(Dense(50, activation='softmax'))
     model.add(Dense(1))
     model.compile(loss='mae', optimizer='adam')
 
@@ -401,7 +408,7 @@ def test_station(data, station, BS=5, LAG=1):
 
     # fit network
     ###################### Can change Epochs, Batch size here #######################
-    history = model.fit(train_X, train_y, epochs=25, batch_size=3, validation_data=(test_X, test_y),
+    history = model.fit(train_X, train_y, epochs=99, batch_size=20, validation_data=(validation_X, validation_Y),
                         verbose=1, shuffle=False)
     # plot history
 
@@ -411,17 +418,31 @@ def test_station(data, station, BS=5, LAG=1):
     # pyplot.show()
 
     # make a prediction
+    """
+    yhat = model.predict(validation_X)
+    validation_X = validation_X.reshape((validation_X.shape[0], validation_X.shape[2]))
+    inv_yhat = concatenate((yhat, validation_X[:, 1:]), axis=1)
+    inv_yhat = scaler.inverse_transform(inv_yhat)
+    inv_yhat = inv_yhat[:, 0]
+    validation_Y = validation_Y.reshape((len(validation_Y), 1))
+    inv_y = concatenate((validation_Y, validation_X[:, 1:]), axis=1)
+
+
+    """
     yhat = model.predict(test_X)
-    # print("yhat:")
-    # print(yhat)
+
     test_X = test_X.reshape((test_X.shape[0], test_X.shape[2]))
+
     # invert scaling for forecast
     inv_yhat = concatenate((yhat, test_X[:, 1:]), axis=1)
+
     inv_yhat = scaler.inverse_transform(inv_yhat)
     inv_yhat = inv_yhat[:, 0]
     # invert scaling for actual
     test_y = test_y.reshape((len(test_y), 1))
+
     inv_y = concatenate((test_y, test_X[:, 1:]), axis=1)
+
     inv_y = scaler.inverse_transform(inv_y)
     inv_y = inv_y[:, 0]
     end = time.time()
@@ -444,7 +465,7 @@ def test_station(data, station, BS=5, LAG=1):
         fig_verify = plt.figure(figsize=(17, 8))
         plt.plot(preds, color="blue")
         plt.plot(actual, color="orange")
-        plt.title('AV pour LSTM:' + station_name)
+        plt.title('SV pour LSTM:' + station_name + " test")
         plt.ylabel('Pollution [PM10]')
         plt.xlabel('Daily timestep for 1 year')
         # str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(test_y_expand, final_preds_expand)) + '\nMSE = ' + str(mse.item())
@@ -453,14 +474,14 @@ def test_station(data, station, BS=5, LAG=1):
         dates_legend = plt.legend([str_legend], loc='upper right')
         ax = plt.gca().add_artist(first_legend)
         path_model_regression_verify = "./Seq2seq_juillet/" + folder + "/LSTM_lilleSeq2seq_lille" + text + ".png"
-        fig_verify.savefig('./Data/' + station_name + "_" + text)
+        fig_verify.savefig('./Images/' + station_name + "_" + text)
         plt.show()
 
-    str_legend = 'R2: ' + str(r2_score(inv_y, inv_yhat)) + "\nRMSE: " + str(rmse) + "\nMSE: " + str(mse) + "\nBatch=5, Lag=1"
+    str_legend = 'R2: ' + str(r2_score(inv_y, inv_yhat)) + "\nRMSE: " + str(rmse) + "\nMSE: " + str(mse) + "\nBatch=20, Lag=1"
 
     real_data = inv_y[-318:, ]
 
-    np.savetxt("./Data/" + "/y_testLSTM.csv", real_data, delimiter=",")
+    #np.savetxt("./Data/" + "/y_testLSTM.csv", real_data, delimiter=",")
 
 
     plot_preds_actual(inv_yhat[-318:, ], real_data, station, str_legend)
@@ -472,7 +493,7 @@ def test_station(data, station, BS=5, LAG=1):
     # print('Variance score: %.2f' % r2_score(y, data_pred))
     #print('Variance score: {:2f}'.format(r2_score(inv_y, inv_yhat)))
 
-    params = 'Batch: ' + str(BS) + ' #   Lag: ' + str(LAG) + ' #   R2: {:2f}'.format(r2_score(inv_y, inv_yhat)) + ' #   RMSE:' + str(rmse)
+    params = 'Batch: ' + str(20) + ' #   Epochs: ' + str(99) + ' #   R2: {:2f}'.format(r2_score(inv_y, inv_yhat)) + ' #   RMSE:' + str(rmse)
     print(params)
 
     write_results(params)
@@ -487,6 +508,8 @@ datasets = {'salouel': salouel_raw_data, 'roth': roth_raw_data, 'creil': creil_r
 #BSs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 BSs = [1, 3, 5, 7, 9, 10, 15, 20, 30, 40, 50]
 LAGS = [1, 2, 4, 6, 8, 10, 12, 15, 20]
+
+
 
 """
 for bs in BSs:
@@ -531,5 +554,7 @@ print(R2)
 #test_station(salouel_raw_data, "salouel")
 """
 
-test_station(salouel_raw_data, "Salouel")
-
+test_station(roth_raw_data, "Roth")
+#AV: 056 salou  #  0.56 creil # 0.59 roth #
+#  SV: roth 0.59 / salou 0.574 / creil 0.56 ##
+# SVT: creil:

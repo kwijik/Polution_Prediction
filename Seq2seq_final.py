@@ -52,7 +52,7 @@ def plot_lstm_vs_rmse(hidden_dims, rmses):
     fig.savefig('./SVR/dimension_saluel')
 
 
-def plot_test(final_preds_expand, test_y_expand, str_legend, folder):
+def plot_test(final_preds_expand, test_y_expand, str_legend, station):
     """
     fig, ax = plt.subplots(figsize=(17,8))
     ax.set_title("Test Predictions vs. Actual For Last Year")
@@ -67,7 +67,7 @@ def plot_test(final_preds_expand, test_y_expand, str_legend, folder):
     fig_verify = plt.figure(figsize=(17,8))
     plt.plot(final_preds_expand, color="blue")
     plt.plot(test_y_expand, color="orange")
-    plt.title('AV Seq2seq : Salouel')
+    plt.title('AV Seq2seq : ' + str(station))
     plt.ylabel('Pollution [PM10]')
     plt.xlabel('Daily timestep for 1 year')
     #str_legend = 'station: '+ str(station) + '\nR2 = ' + str(r2_score(test_y_expand, final_preds_expand)) + '\nMSE = ' + str(mse.item())
@@ -88,7 +88,7 @@ def plot_test(final_preds_expand, test_y_expand, str_legend, folder):
     plt.show()
     #path_model_regression_verify = "./Data/"+ folder + "/Seq2seq_lilleSeq2seq_lille" + text + ".png"
 
-    path_model_regression_verify = "./Data/s2s_Salouel" + ".png"
+    path_model_regression_verify = "./Images/s2s_Roth.png"
 
 
     fig_verify.savefig(path_model_regression_verify)
@@ -249,9 +249,9 @@ def prepare_data(df_temp, keep_season=False, keep_wind=False):
     train_data = pd.get_dummies(train_data)
     test_data = pd.get_dummies(test_data)
     #print(test_data.info())
-    train_data.to_csv('./data/train.csv')
+    #train_data.to_csv('./data/train.csv')
 
-    test_data.to_csv('./data/test.csv')
+    #test_data.to_csv('./data/test.csv')
 
     print("Dataframes saved...")
     return train_data, test_data, validation_data
@@ -289,7 +289,7 @@ def gen_sequence(df, n_future):
     return X_seq
 
 
-def test_station(data, station, inp=1, otp=1):
+def test_station(data, station, inp=3, otp=1):
     global folder, os
     print("Entered in Function " + station)
     #text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -307,8 +307,14 @@ def test_station(data, station, inp=1, otp=1):
     print(df_temp.head(2))
     #print(test_data.head())
 
-    X_train = train_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
-    X_test = test_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
+    #X_train = train_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
+    #X_test = test_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
+
+
+    X_train = train_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
+    X_test = test_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
+    X_validation = validation_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
+
 
     #X_train = train_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
     #X_test = test_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
@@ -351,20 +357,20 @@ def test_station(data, station, inp=1, otp=1):
     # here we save test and train in files
 
     print("Y TEST")
-    np.savetxt("./Data/" + "/y_testS2S.csv", y_test, delimiter=",")
+    #np.savetxt("./Data/" + "/y_testS2S.csv", y_test, delimiter=",")
     print(y_test.shape)
 
     print("X TEST")
-    np.savetxt("./Seq2seq_juillet/X_test.csv", X_test, delimiter=",")
+    #np.savetxt("./Seq2seq_juillet/X_test.csv", X_test, delimiter=",")
     print(X_test.shape)
 
 
     print("Y train")
-    np.savetxt("./Seq2seq_juillet/" + "/y_train.csv", y_train, delimiter=",")
+    #np.savetxt("./Seq2seq_juillet/" + "/y_train.csv", y_train, delimiter=",")
     print(y_train.shape)
 
     print("X train")
-    np.savetxt("./Seq2seq_juillet/" + "/X_train.csv", X_train, delimiter=",")
+    #np.savetxt("./Seq2seq_juillet/" + "/X_train.csv", X_train, delimiter=",")
     print(X_train.shape)
 
 
@@ -656,7 +662,7 @@ def test_station(data, station, inp=1, otp=1):
 
 
         temp_saver = rnn_model['saver']()
-        sous_chemin = './Seq2seq_juillet/' + folder + "/"
+        sous_chemin = './' + folder + "/"
 
         save_path = temp_saver.save(sess, os.path.join(sous_chemin, 'mv_ts_pollution_case'))
 
@@ -676,7 +682,7 @@ def test_station(data, station, inp=1, otp=1):
     init = tf.global_variables_initializer()
     with tf.Session() as sess:
         sess.run(init)
-        sous_chemin = './Seq2seq_juillet/' + folder + "/"
+        sous_chemin = './' + folder + "/"
         saver = rnn_model['saver']().restore(sess, os.path.join(sous_chemin, 'mv_ts_pollution_case'))
 
         feed_dict = {rnn_model['enc_inp'][t]: test_x[:, t, :] for t in range(input_seq_len)}  # batch prediction
@@ -729,15 +735,15 @@ def test_station(data, station, inp=1, otp=1):
 
     rmse = np.sqrt(mse)
     #print(rmse)
-    str_legend = 'R2 = ' + str(r2_score(y_inv, yhat_inv)) + '\nMSE = ' + str(mse.item()) + '\nRMSE = ' + str(rmse)  + '\nInput=1; Output=1'
+    str_legend = 'R2 = ' + str(r2_score(y_inv, yhat_inv)) + '\nMSE = ' + str(mse.item()) + '\nRMSE = ' + str(rmse)  + '\nInput=' + str(inp) + '; Output='+ str(otp)
     #print("DATA test:")
     #print(y_inv.shape)
-    np.savetxt("./Data/y_seq.csv", y_inv, delimiter=",")
+    #np.savetxt("./Data/y_seq.csv", y_inv, delimiter=",")
     #np.savetxt("./Data/.csv", yhat_inv, delimiter=",")
 
     #print(y_inv.shape)
 
-    plot_test(y_inv, yhat_inv, str_legend, folder)
+    plot_test(y_inv, yhat_inv, str_legend, station)
 #    print("######")
 #    print(unscaled_y.values)
 #    print("######")
@@ -801,4 +807,4 @@ for key in dict_data.keys():
     print("--------------------")
 """
 
-test_station(salouel_raw_data, 'Salouel')
+test_station(roth_raw_data, 'Roth')

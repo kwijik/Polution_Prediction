@@ -41,6 +41,7 @@ def plot_lstm_vs_time(batch_sizes, times_test, times_train):
     fig.savefig('./SVR/temp_saluel')
 
 RMSES = []
+R2 = []
 def plot_lstm_vs_rmse(hidden_dims, rmses):
     fig, ax = plt.subplots(figsize=(8,5))
     ax.set_title('LSTM Seq2Seq Hidden Dim vs. RMSE', fontsize=16)
@@ -289,7 +290,7 @@ def gen_sequence(df, n_future):
     return X_seq
 
 
-def test_station(data, station, inp, otp):
+def test_station(data, station, otp, inp=5):
     global folder, os
     print("Entered in Function " + station)
     #text = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -307,14 +308,16 @@ def test_station(data, station, inp, otp):
     print(df_temp.head(2))
     #print(test_data.head())
 
-    #X_train = train_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
-    #X_test = test_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
+    X_train = train_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
+    X_test = test_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
+    X_validation = validation_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'TN', 'TX']].values.copy()
 
     #X_train = train_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
     #X_test = test_data.loc[:, ['PM10', 'RR', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT']].values.copy()
 
-    X_train = train_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
-    X_test = test_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
+     #X_train = train_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
+    #X_test = test_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
+    #X_validation = validation_data.loc[:, ['PM10', 'RR', 'PMERM', 'FFM', 'UM', 'TX']].values.copy()
 
 
     #X_train = train_data.loc[:, ['PM10', 'RR', 'TN', 'TX', 'TM', 'PMERM', 'FFM', 'UM', 'GLOT', 'vent_E', 'vent_SO','vent_N', 'vent_NE', 'vent_NO', 'vent_O', 'vent_S', 'vent_SE']].values.copy()
@@ -331,6 +334,7 @@ def test_station(data, station, inp, otp):
     print(X_test.shape)
     reframed_train = series_to_supervised(X_train, n_out=1)
     reframed_test = series_to_supervised(X_test, n_out=1)
+    reframed_validation = series_to_supervised(X_validation, n_out=1)
 
 
 
@@ -339,13 +343,14 @@ def test_station(data, station, inp, otp):
 
     X_test = np.copy(reframed_test.values)
     X_train = np.copy(reframed_train)
+    X_validation = np.copy(reframed_validation.values)
 
 
     y_train = train_data['PM10'].values.copy().reshape(-1, 1)
     #print("shape:")
     #print(y_train.shape[1])
     y_test = test_data['PM10'].values.copy().reshape(-1, 1)
-
+    y_validation = validation_data['PM10'].values.copy().reshape(-1, 1)
 
 
     # here we save test and train in files
@@ -380,6 +385,7 @@ def test_station(data, station, inp, otp):
         temp_std = X_train[:, i].std()
         X_train[:, i] = (X_train[:, i] - temp_mean) / temp_std
         X_test[:, i] = (X_test[:, i] - temp_mean) / temp_std
+        X_validation[:, i] = (X_validation[:, i] - temp_mean) / temp_std
 
 
     ## z-score transform y
@@ -387,6 +393,9 @@ def test_station(data, station, inp, otp):
     y_std = y_train.std()
     y_train = (y_train - y_mean) / y_std
     y_test = (y_test - y_mean) / y_std
+    y_test = (y_test - y_mean) / y_std
+    y_validation = (y_validation - y_mean) / y_std
+
 
     input_seq_len = inp
     output_seq_len = otp
@@ -420,10 +429,27 @@ def test_station(data, station, inp, otp):
 
         return input_seq, output_seq
 
+
+    def generate_validation_samples(x=X_validation, y=y_validation, input_seq_len=input_seq_len, output_seq_len=output_seq_len):
+        total_samples = x.shape[0]
+
+        input_batch_idxs = [list(range(i, i + input_seq_len)) for i in
+                            range((total_samples - input_seq_len - output_seq_len))]
+        input_seq = np.take(x, input_batch_idxs, axis=0)
+
+        output_batch_idxs = [list(range(i + input_seq_len, i + input_seq_len + output_seq_len)) for i in
+                             range((total_samples - input_seq_len - output_seq_len))]
+        output_seq = np.take(y, output_batch_idxs, axis=0)
+
+        return input_seq, output_seq
+
+
     x, y = generate_train_samples()
     #print(x.shape, y.shape)
 
-    test_x, test_y = generate_test_samples()
+    #test_x, test_y = generate_test_samples()
+    test_x, test_y = generate_validation_samples()
+
     #print(test_x.shape, test_y.shape)
 
     from tensorflow.contrib import rnn
@@ -752,6 +778,7 @@ def test_station(data, station, inp, otp):
     #times_test.append(test_time)
     #times_train.append(train_time)
     RMSES.append(rmse)
+    R2.append(test_R2)
     res = "Input: " + str(inp) + " #  Output: " + str(otp) +  " #  RMSE: " + str(rmse)  + " #  R2: " + str(test_R2)
     write_results(res)
     print(res)
@@ -768,14 +795,21 @@ INPs = [1, 2, 3, 4, 5, 6, 7, 8]
 OUTS = [1, 2, 3, 4, 5, 6, 7, 8]
 DIMENSIONS = [10, 20, 30, 40, 50, 60]
 
-for INP in OUTS:
-    for OUT in OUTS:
-        test_station(salouel_raw_data, "salouel", INP, OUT)
+for INP in INPs:
+    test_station(creil_raw_data, "Creil", INP, 5)
 
 print("rmses")
 print(RMSES)
+print(R2)
 
 """
+
+for INP in OUTS:
+    for OUT in OUTS:
+        test_station(creil_raw_data, "Creil", INP, OUT)
+        
+        
+        
 #plot_lstm_vs_time(BSs, times_test, times_train)
 plot_lstm_vs_rmse(DIMENSIONS, RMSES)
 
