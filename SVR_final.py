@@ -427,7 +427,7 @@ def test_station(data, station):
         ax = plt.gca().add_artist(first_legend)
         path_model_regression_verify = "./Seq2seq_juillet/" + folder + "/Seq2seq_lilleSeq2seq_lille" + text + ".png"
         plt.show()
-        fig_verify.savefig('./Data/svr__' +station_name )
+        fig_verify.savefig('./Images/svr__' +station_name )
 
     str_legend = 'R2: ' + str(r2_score(y_inv, y_pred)) + "\nRMSE: " + str(rmse) + "\nMSE: " + str(mse) + "\nGamma:0.7; C:0.9"
 
@@ -435,7 +435,7 @@ def test_station(data, station):
 
     y_real = y_inv[divider:,]
 
-    np.savetxt("./Data/y_svr.csv", y_real, delimiter=",")
+    #np.savetxt("./Data/y_svr.csv", y_real, delimiter=",")
 
 
     plot_preds_actual(y_pred[divider:,], y_inv[divider:,], station, str_legend)
