@@ -1,46 +1,25 @@
 import pandas as pd
 import numpy as np
 import datetime
-import os, sys
 
 import time
 from math import sqrt
-from pandas import DataFrame
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from matplotlib import pyplot
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-from numpy import concatenate
-np.random.seed(7)
-from pandas import concat
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 from pollution_plots import *
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+np.random.seed(7)
 
-import matplotlib.patches as mpatches
 
 folder = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# Graphic functions:
-class AnyObject(object):
-    pass
-
-class AnyObjectHandler(object):
-    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
-        x0, y0 = handlebox.xdescent, handlebox.ydescent
-        width, height = handlebox.width, handlebox.height
-        patch = mpatches.Rectangle([x0, y0], width, height, facecolor='red',
-                                   edgecolor='black', hatch='xx', lw=3,
-                                   transform=handlebox.get_transform())
-        handlebox.add_artist(patch)
-        return patch
-
-
-np.random.seed(7)
 
 
 # changed all , by . in cvs files
@@ -99,7 +78,7 @@ validation_date = '31/12/2014'
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     #print('in series to suprsd')
     n_vars = 1 if type(data) is list else data.shape[1]
-    df = DataFrame(data)
+    df = pd.DataFrame(data)
     if dropnan:
         df.dropna(inplace=True)
     cols, names = list(), list()
@@ -115,7 +94,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
         else:
             names += [('var%d(t+%d)' % (j+1, i)) for j in range(n_vars)]
     # put it all together
-    agg = concat(cols, axis=1)
+    agg = pd.concat(cols, axis=1)
     agg.columns = names
     # drop rows with NaN values
 
@@ -138,7 +117,7 @@ def test_station(data, station):
     dataset = dataset.drop([ 'TN'], axis=1)
 
     values = dataset.values
-    values = DataFrame(values).dropna().values
+    values = pd.DataFrame(values).dropna().values
     encoder = LabelEncoder()
     values[:, 8] = encoder.fit_transform(values[:, 8])
 
@@ -208,12 +187,12 @@ def test_station(data, station):
     test_X = test_X.reshape((test_X.shape[0], test_X.shape[2]))
 
     # invert scaling for forecast
-    inv_yhat = concatenate((yhat, test_X[:, 1:]), axis=1)
+    inv_yhat = np.concatenate((yhat, test_X[:, 1:]), axis=1)
     inv_yhat = scaler.inverse_transform(inv_yhat)
     inv_yhat = inv_yhat[:, 0]
     # invert scaling for actual
     test_y = test_y.reshape((len(test_y), 1))
-    inv_y = concatenate((test_y, test_X[:, 1:]), axis=1)
+    inv_y = np.concatenate((test_y, test_X[:, 1:]), axis=1)
 
     inv_y = scaler.inverse_transform(inv_y)
     inv_y = inv_y[:, 0]

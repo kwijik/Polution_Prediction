@@ -462,9 +462,6 @@ def test_station(data, station):
 
     total_iteractions = 180
     batch_size = 16
-    KEEP_RATE = 0.5
-    train_losses = []
-    val_losses = []
 
     x = np.linspace(0, 40, 130)
     train_data_x = x[:110]
@@ -497,8 +494,6 @@ def test_station(data, station):
 
     print('Time taken to train is {} minutes'.format((end_train - start_train) / 60))
     print('Time in seconds is: {}'.format(end_train - start_train))
-
-    train_time = end_train - start_train
 
     rnn_model = build_graph(feed_previous=True)
 

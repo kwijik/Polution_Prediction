@@ -129,8 +129,10 @@ def test_station(data, station):
     scaled_label = scaler.fit_transform(values[:,-1].reshape(-1,1))
     values = np.column_stack((scaled_features, scaled_label))
 
-    n_train_days = 359 * 3
-    test_days = n_train_days + 365
+    observed_days = 359
+    days_in_years = 365
+    n_train_days = observed_days * 3
+    test_days = n_train_days + days_in_years
     train = values[:n_train_days, :]
     test = values[test_days:, :]
     validation = values[n_train_days:test_days, :]
@@ -153,8 +155,11 @@ def test_station(data, station):
     y = train_y
     val_X = validation_X
 
-    regr = SVR(C = 0.9, epsilon = 0.06, kernel = 'rbf', gamma = 0.7,
-               tol = 0.001, verbose=False, shrinking=True, max_iter = 10000)
+    epsilon = 0.06
+    tol = 0.001
+    max_iter = 10000
+    regr = SVR(C = 0.9, epsilon = epsilon, kernel = 'rbf', gamma = 0.7,
+               tol = tol, verbose=False, shrinking=True, max_iter = max_iter)
 
     print('X;')
     print(x.shape)
