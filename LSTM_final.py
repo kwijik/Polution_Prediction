@@ -43,9 +43,6 @@ cols = ['Date', 'PM10', 'RR', 'TN', 'TX', 'TM',
                      'PMERM', 'FFM', 'UM', 'GLOT', 'DXY']
 
 
-arr_row_data = [salouel_raw_data, creil_raw_data, roth_raw_data]
-
-
 # Deleting dates column and making it all floats
 # input df (dataframe), output df (dataframe)
 def preprocessing_data(df):
