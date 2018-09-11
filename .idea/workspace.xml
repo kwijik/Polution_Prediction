@@ -2,7 +2,25 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d1306620-f1ff-45bc-b482-6cacc533b5c5" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SVR_final.py" afterPath="$PROJECT_DIR$/SVR_final.py" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:44:04/checkpoint" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:44:04/mv_ts_pollution_case.data-00000-of-00001" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:44:04/mv_ts_pollution_case.index" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:44:04/mv_ts_pollution_case.meta" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:55:46/checkpoint" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:55:46/mv_ts_pollution_case.data-00000-of-00001" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:55:46/mv_ts_pollution_case.index" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/2018-08-22 23:55:46/mv_ts_pollution_case.meta" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/Cleaner.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/Column_settings.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/Comparison_RMSE.ipynb" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/W_settings.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/data_info.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/grid_seq.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/pollution_plots.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/propositio/agenda_par_semaines.odt" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Images/s2s_Roth.png" afterPath="$PROJECT_DIR$/Images/s2s_Roth.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Images/svr__Roth.png" afterPath="$PROJECT_DIR$/Images/svr__Roth.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -12,7 +30,10 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/Polution_Prediction$Unittests_in_Seq2seq_final_py.coverage" NAME="Unittests in Seq2seq_final.py Coverage Results" MODIFIED="1534973645816" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Polution_Prediction$Unittests_in_Seq2seq_final_py.coverage" NAME="Unittests in Seq2seq_final.py Coverage Results" MODIFIED="1535957344219" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Polution_Prediction$Unittests_in_SVR_final_py.coverage" NAME="Unittests in SVR_final.py Coverage Results" MODIFIED="1535958583151" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Polution_Prediction$Unittests_in_LSTM_final_py.coverage" NAME="Unittests in LSTM_final.py Coverage Results" MODIFIED="1535957851423" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Polution_Prediction$data_info.coverage" NAME="data_info Coverage Results" MODIFIED="1536617294212" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
@@ -20,8 +41,8 @@
       <file leaf-file-name="LSTM_final.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/LSTM_final.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-33">
-              <caret line="476" column="36" lean-forward="false" selection-start-line="476" selection-start-column="36" selection-end-line="476" selection-end-column="36" />
+            <state relative-caret-position="968">
+              <caret line="117" column="20" lean-forward="false" selection-start-line="117" selection-start-column="20" selection-end-line="117" selection-end-column="20" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -32,8 +53,18 @@
       <file leaf-file-name="Seq2seq_final.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Seq2seq_final.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="92">
-              <caret line="637" column="15" lean-forward="true" selection-start-line="637" selection-start-column="0" selection-end-line="638" selection-end-column="0" />
+            <state relative-caret-position="31">
+              <caret line="50" column="44" lean-forward="false" selection-start-line="50" selection-start-column="34" selection-end-line="50" selection-end-column="44" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GridSearch_seq2seq_in_out.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/GridSearch_seq2seq_in_out.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="118">
+              <caret line="518" column="105" lean-forward="false" selection-start-line="518" selection-start-column="105" selection-end-line="518" selection-end-column="105" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -41,11 +72,43 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SVR_final.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="45">
+              <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="15">
+              <caret line="1" column="10" lean-forward="false" selection-start-line="1" selection-start-column="10" selection-end-line="1" selection-end-column="10" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GridSearch_gamma_c.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/GridSearch_gamma_c.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="425">
+              <caret line="224" column="12" lean-forward="false" selection-start-line="224" selection-start-column="12" selection-end-line="224" selection-end-column="12" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SVR_final.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SVR_final.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="135">
-              <caret line="216" column="13" lean-forward="false" selection-start-line="216" selection-start-column="9" selection-end-line="216" selection-end-column="13" />
+            <state relative-caret-position="504">
+              <caret line="201" column="15" lean-forward="false" selection-start-line="201" selection-start-column="15" selection-end-line="201" selection-end-column="15" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -64,8 +127,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Seq2seq_j</find>
-      <find>Data</find>
+      <find>times_train</find>
+      <find>scale_transformer</find>
+      <find>RMSE</find>
+      <find>plot_preds_actual</find>
+      <find>folder</find>
+      <find>prepare_data</find>
+      <find>gen_sequence</find>
+      <find>input_seq_len</find>
+      <find>functions</find>
+      <find>preprocessing_data</find>
+      <find>n_past</find>
+      <find>n_future</find>
+      <find>inp</find>
+      <find>build_graph</find>
+      <find>test_x</find>
+      <find>get_season</find>
+      <find>clean_data</find>
+      <find>encoder</find>
+      <find>DataFrame</find>
+      <find>pd.</find>
+      <find>concat</find>
+      <find>concatenate</find>
+      <find>plot_lstm_vs_time</find>
+      <find>plot_lstm_vs_rmse</find>
+      <find>AnyObject</find>
+      <find>AnyObjectHandler</find>
+      <find>KEEP_RATE</find>
+      <find>plot_test</find>
+      <find>test_station</find>
+      <find>0.5</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -75,9 +166,15 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/app.py" />
-        <option value="$PROJECT_DIR$/LSTM_final.py" />
-        <option value="$PROJECT_DIR$/Seq2seq_final.py" />
         <option value="$PROJECT_DIR$/SVR_final.py" />
+        <option value="$PROJECT_DIR$/GridSearch_gamma_c.py" />
+        <option value="$PROJECT_DIR$/Seq2seq_final.py" />
+        <option value="$PROJECT_DIR$/GridSearch_seq2seq_in_out.py" />
+        <option value="$PROJECT_DIR$/readme.md" />
+        <option value="$PROJECT_DIR$/LSTM_final.py" />
+        <option value="$PROJECT_DIR$/data_info.py" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -88,8 +185,9 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="171" />
-    <option name="width" value="1426" />
+    <option name="x" value="241" />
+    <option name="y" value="112" />
+    <option name="width" value="1418" />
     <option name="height" value="813" />
   </component>
   <component name="ProjectView">
@@ -107,6 +205,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -121,7 +220,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="Scratches" />
     </panes>
   </component>
@@ -142,7 +240,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python tests.Unittests in Seq2seq_final.py">
+  <component name="RunManager" selected="Python.data_info">
     <configuration default="false" name="Unittests in Seq2seq_final.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -157,6 +255,57 @@
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;$PROJECT_DIR$/Seq2seq_final.py&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittests in LSTM_final.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Polution_Prediction" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/LSTM_final.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittests in SVR_final.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Polution_Prediction" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/SVR_final.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method />
+    </configuration>
+    <configuration default="false" name="data_info" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="Polution_Prediction" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/data_info.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="DjangoTestsConfigurationType" factoryName="Django tests">
@@ -307,12 +456,18 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method />
     </configuration>
-    <list size="1">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in Seq2seq_final.py" />
+      <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in LSTM_final.py" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in SVR_final.py" />
+      <item index="3" class="java.lang.String" itemvalue="Python.data_info" />
     </list>
     <recent_temporary>
-      <list size="1">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in Seq2seq_final.py" />
+      <list size="4">
+        <item index="0" class="java.lang.String" itemvalue="Python.data_info" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in SVR_final.py" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in LSTM_final.py" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in Seq2seq_final.py" />
       </list>
     </recent_temporary>
   </component>
@@ -330,6 +485,12 @@
     <servers />
   </component>
   <component name="TestHistory">
+    <history-entry file="Unittests_in_LSTM_final_py - 2018.09.03 at 08h 59m 44s.xml">
+      <configuration name="Unittests in LSTM_final.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_SVR_final_py - 2018.09.03 at 09h 09m 48s.xml">
+      <configuration name="Unittests in SVR_final.py" configurationId="tests" />
+    </history-entry>
     <history-entry file="Unittests_in_Seq2seq_final_py - 2018.08.22 at 23h 32m 32s.xml">
       <configuration name="Unittests in Seq2seq_final.py" configurationId="tests" />
     </history-entry>
@@ -337,6 +498,18 @@
       <configuration name="Unittests in Seq2seq_final.py" configurationId="tests" />
     </history-entry>
     <history-entry file="Unittests_in_Seq2seq_final_py - 2018.08.22 at 23h 34m 07s.xml">
+      <configuration name="Unittests in Seq2seq_final.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_Seq2seq_final_py - 2018.08.30 at 16h 31m 17s.xml">
+      <configuration name="Unittests in Seq2seq_final.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_Seq2seq_final_py - 2018.09.03 at 08h 07m 19s.xml">
+      <configuration name="Unittests in Seq2seq_final.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_Seq2seq_final_py - 2018.09.03 at 08h 08m 19s.xml">
+      <configuration name="Unittests in Seq2seq_final.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_Seq2seq_final_py - 2018.09.03 at 08h 49m 21s.xml">
       <configuration name="Unittests in Seq2seq_final.py" configurationId="tests" />
     </history-entry>
   </component>
@@ -350,18 +523,18 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="171" width="1426" height="813" extended-state="0" />
+    <frame x="241" y="112" width="1418" height="813" extended-state="0" />
+    <editor active="true" />
     <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15697674" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32871014" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32871014" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32871014" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32871014" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32871014" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25361273" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.44937587" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32871014" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -370,6 +543,7 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -384,7 +558,7 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/app.py">
+    <entry file="file://$PROJECT_DIR$/LSTM_final.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -392,41 +566,153 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/LSTM_final.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-33">
-          <caret line="476" column="36" lean-forward="false" selection-start-line="476" selection-start-column="36" selection-end-line="476" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/pandas/io/common.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="389" column="0" lean-forward="false" selection-start-line="389" selection-start-column="0" selection-end-line="389" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Seq2seq_final.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="92">
-          <caret line="637" column="15" lean-forward="true" selection-start-line="637" selection-start-column="0" selection-end-line="638" selection-end-column="0" />
+        <state relative-caret-position="105">
+          <caret line="12" column="29" lean-forward="false" selection-start-line="12" selection-start-column="29" selection-end-line="12" selection-end-column="29" />
           <folding>
-            <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#0#19#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SVR_final.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="135">
-          <caret line="216" column="13" lean-forward="false" selection-start-line="216" selection-start-column="9" selection-end-line="216" selection-end-column="13" />
+        <state relative-caret-position="105">
+          <caret line="11" column="33" lean-forward="true" selection-start-line="11" selection-start-column="33" selection-end-line="11" selection-end-column="33" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LSTM_final.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Seq2seq_final.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="9360">
+          <caret line="637" column="15" lean-forward="true" selection-start-line="637" selection-start-column="0" selection-end-line="638" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#19#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app.py" />
+    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/site-packages/pandas/io/common.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="152">
+          <caret line="389" column="0" lean-forward="false" selection-start-line="389" selection-start-column="0" selection-end-line="389" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SVR_final.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="504">
+          <caret line="201" column="15" lean-forward="false" selection-start-line="201" selection-start-column="15" selection-end-line="201" selection-end-column="15" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/GridSearch_gamma_c.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="224" column="12" lean-forward="false" selection-start-line="224" selection-start-column="12" selection-end-line="224" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LSTM.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3484">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/new_data_seq2seq.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-8356">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/GridSearch_seq2seq_in_out.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="118">
+          <caret line="518" column="105" lean-forward="false" selection-start-line="518" selection-start-column="105" selection-end-line="518" selection-end-column="105" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pollution_plots.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-21">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/data_info.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="41" column="25" lean-forward="false" selection-start-line="41" selection-start-column="25" selection-end-line="41" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LSTM_final.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="968">
+          <caret line="117" column="20" lean-forward="false" selection-start-line="117" selection-start-column="20" selection-end-line="117" selection-end-column="20" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Seq2seq_final.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="31">
+          <caret line="50" column="44" lean-forward="false" selection-start-line="50" selection-start-column="34" selection-end-line="50" selection-end-column="44" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Cleaner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="25" lean-forward="true" selection-start-line="8" selection-start-column="25" selection-end-line="8" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="10" lean-forward="false" selection-start-line="1" selection-start-column="10" selection-end-line="1" selection-end-column="10" />
+          <folding />
         </state>
       </provider>
     </entry>
