@@ -35,9 +35,9 @@ def write_results(text):
 
 
 # reading data from files
-salouel_raw_data = pd.read_csv("./propositio/salou.csv", header=None, sep=';', decimal=',')
-roth_raw_data = pd.read_csv("./propositio/roth.csv", header=None, sep=';', decimal=',')
-creil_raw_data = pd.read_csv("./propositio/creil.csv", header=None, sep=';', decimal=',')
+salouel_raw_data = pd.read_csv("./Data/salou.csv", header=None, sep=';', decimal=',')
+roth_raw_data = pd.read_csv("./Data/roth.csv", header=None, sep=';', decimal=',')
+creil_raw_data = pd.read_csv("./Data/creil.csv", header=None, sep=';', decimal=',')
 
 cols = ['Date', 'PM10', 'RR', 'TN', 'TX', 'TM',
                      'PMERM', 'FFM', 'UM', 'GLOT', 'DXY']
