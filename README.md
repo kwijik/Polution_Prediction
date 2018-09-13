@@ -1,6 +1,6 @@
-# Air pollution prediction Haut-de-France :foggy:
+# Air pollution prediction Haut-de-France
 
-This project is about predicting pollution in north region of France. At the moment I used 3 models: Seq2seq, LSTM and SVR.
+This project is about predicting pollution :foggy: in north region of France.  At the moment I used 3 models: Seq2seq, LSTM and SVR.
 
 
 ## Data
