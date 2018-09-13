@@ -5,7 +5,7 @@ At the moment I used 3 models: Seq2seq, LSTM and SVR.
 
 
 ## Data
-The data is text files (.txt) with following schema: <br/>
+The data is text files (.txt) with following columns: <br/>
 `Date`: observable date <br/>
 `PM10`: level of pollution <br/>
 `RR`: precipitations <br/>
@@ -17,5 +17,14 @@ The data is text files (.txt) with following schema: <br/>
 `UM`: average relative humidity <br/>
 `GLOT`: global radiation <br/>
 `DXY`: average wind direction <br/>
+
+## Techno
+`Python` <br/>
+`Tensorflow`  <br/>
+`Keras` <br/>
+`Sklearn` <br/>
+`Pandas` <br/>
+`Numpy` <br/>
+`Matplotlib` <br/>
 
 LSTM_final.py, SVR_final.py and Seq2seq_final.py are final versions with optimized parametres.
