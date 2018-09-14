@@ -18,7 +18,7 @@ The data is text files (.txt) with following columns: <br/>
 `GLOT`: global radiation <br/>
 `DXY`: average wind direction <br/>
 
-## Techno
+## Bibliothèques
 `Python` <br/>
 `Tensorflow`  <br/>
 `Keras` <br/>
