@@ -27,4 +27,4 @@ The data is text files (.txt) with following columns: <br/>
 `Numpy` <br/>
 `Matplotlib` <br/>
 
-LSTM_final.py, SVR_final.py and Seq2seq_final.py are final versions with optimized parametres.
+LSTM_final.py, SVR_final.py and Seq2seq_final.py are final versions with optimized parametres :fr:.
